@@ -40,6 +40,12 @@
                     <mainClass>com.ing.sentinel.agents.BehavioralRiskDetector</mainClass>
                   </configuration>
                 </execution>
+                <execution>
+                  <id>action-executor</id>
+                  <configuration>
+                    <mainClass>com.ing.sentinel.agents.ActionExecutor</mainClass>
+                  </configuration>
+                </execution>
               </executions>
             </plugin>
 
