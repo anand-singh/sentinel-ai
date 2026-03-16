@@ -46,6 +46,12 @@
                     <mainClass>com.ing.sentinel.agents.ActionExecutor</mainClass>
                   </configuration>
                 </execution>
+                <execution>
+                  <id>evidence-builder</id>
+                  <configuration>
+                    <mainClass>com.ing.sentinel.agents.EvidenceBuilderAgent</mainClass>
+                  </configuration>
+                </execution>
               </executions>
             </plugin>
 
