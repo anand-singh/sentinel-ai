@@ -4,31 +4,101 @@ Java/Maven API service using Google ADK for multi-agent fraud defense.
 
 ---
 
+## 🛡️ Agents
+
+### Transaction Pattern Analyzer
+
+The first agent in Sentinel's fraud pipeline. Analyzes individual transactions against global & contextual patterns (amount, merchant, location, time, velocity) and emits a risk signal with clear flags and deterministic reasoning.
+
+> This agent **does not take actions**. It only **scores & explains**.
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `analyze_amount_spike` | Detects unusual transaction amounts using z-score |
+| `analyze_geo_distance` | Checks for impossible travel patterns |
+| `analyze_velocity` | Analyzes transaction frequency bursts |
+| `analyze_rare_mcc` | Detects unusual merchant categories |
+| `analyze_time_window` | Checks for unusual transaction times |
+| `blend_risk_scores` | Combines all signals into final risk score |
+
+**Output:**
+
+```json
+{
+  "risk_score": 86,
+  "severity": "CRITICAL",
+  "flags": ["AMOUNT_SPIKE", "GEO_MISMATCH"],
+  "reasoning": "Anomalies detected: unusual amount (+12.3 pts), impossible travel (+18.5 pts). Total risk: 86/100",
+  "recommendation": "BLOCK_AND_NOTIFY",
+  "feature_contributions": { ... },
+  "version": "pattern-v1.0.0"
+}
+```
+
+---
+
+### Behavioral Risk Agent
+
+The second agent in Sentinel's fraud pipeline. Scores how unusual a transaction is for a **specific customer** by comparing it with that customer's historical behavior (amount ranges, active hours, geo patterns, device/IP, merchant mix, velocity).
+
+> This agent **does not execute actions**. It only **scores & explains**.
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `analyze_amount_deviation` | Compares amount to customer's personal baseline (z-score) |
+| `analyze_time_deviation` | Checks if time is during customer's sleep hours |
+| `analyze_geo_deviation` | Checks distance/speed from customer's last location |
+| `analyze_new_device` | Detects new device fingerprint for this customer |
+| `analyze_new_ip_range` | Detects IP from unusual range for this customer |
+| `analyze_merchant_novelty` | Checks if merchant/MCC is unusual for this customer |
+| `analyze_burst_activity` | Checks if velocity exceeds customer's baseline |
+| `blend_behavioral_scores` | Combines all signals into final behavioral risk score |
+
+**Output:**
+
+```json
+{
+  "behavioral_risk_score": 77,
+  "flags": ["NEW_DEVICE", "UNUSUAL_TIME", "GEO_DEVIATION"],
+  "feature_contributions": {
+    "amount_zscore_customer": 3.2,
+    "hour_deviation": 1.0,
+    "geo_distance_km": 520.5,
+    "new_device": 1,
+    "new_ip_range": 0,
+    "burst_in_window": 0
+  },
+  "reasoning": "Amount 3.2σ above customer's normal, new device, off-hours, travel 520km from last txn.",
+  "version": "behavior-v1.0.0"
+}
+```
+
+---
+
 ## 🚀 Getting Started (Development)
 
 ### Prerequisites
 
-| Requirement        | Version  | Notes                                    |
-|--------------------|----------|------------------------------------------|
-| **Java JDK**       | 17+      | OpenJDK or Oracle JDK                    |
-| **Maven**          | 3.8+     | Build & dependency management            |
-| **Docker**         | 20+      | (Optional) For containerized development |
-| **Google Cloud SDK** | Latest | For Vertex AI / ADK integrations         |
+| Requirement          | Version | Notes                                    |
+|----------------------|---------|------------------------------------------|
+| **Java JDK**         | 17+     | OpenJDK or Oracle JDK                    |
+| **Maven**            | 3.8+    | Build & dependency management            |
+| **Docker**           | 20+     | (Optional) For containerized development |
+| **Google Cloud SDK** | Latest  | For Vertex AI / ADK integrations         |
 
 ### Environment Variables
 
-Create a `.env` file or export these variables:
-
 ```bash
-# MCP Toolbox URL (for Cloud SQL integration)
-export MCP_TOOLBOX_URL="http://127.0.0.1:5000/mcp/"
-
 # Google Cloud / Vertex AI (required for Gemini models)
 export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 
-# Optional: Override default model
-export GEMINI_MODEL="gemini-2.5-flash"
+# Optional: MCP Toolbox URL (for Cloud SQL integration)
+export MCP_TOOLBOX_URL="http://127.0.0.1:5000/mcp/"
 ```
 
 ### Clone & Build
@@ -45,12 +115,17 @@ mvn dependency:go-offline -B
 
 ### Run Locally
 
-**Option 1: Maven Exec Plugin**
+**Transaction Pattern Analyzer:**
 ```bash
-mvn compile exec:java
+mvn compile exec:java@pattern-analyzer
 ```
 
-**Option 2: Run with ADK Web Server**
+**Behavioral Risk Agent:**
+```bash
+mvn compile exec:java@behavioral-risk
+```
+
+**With ADK Web Server:**
 ```bash
 mvn compile exec:java \
   -Dexec.args="--server.port=8080 \
@@ -68,7 +143,6 @@ docker build -t sentinel-ai-api .
 
 # Run container
 docker run -p 8080:8080 \
-  -e MCP_TOOLBOX_URL="http://host.docker.internal:5000/mcp/" \
   -e GOOGLE_CLOUD_PROJECT="your-project" \
   sentinel-ai-api
 ```
@@ -79,24 +153,41 @@ docker run -p 8080:8080 \
 
 ```
 api/
-├── pom.xml                         # Maven build config (Java 17, ADK deps)
-├── Dockerfile                      # Container build definition
-├── src/
-│   └── main/
-│       └── java/
-│           └── SoftwareBugAssistant.java   # Main agent entry point
-└── README.md                       # This file
+├── pom.xml
+├── Dockerfile
+└── src/main/java/
+    ├── SoftwareBugAssistant.java
+    └── com/ing/sentinel/
+        ├── agents/
+        │   ├── TransactionPatternAnalyzer.java
+        │   └── BehavioralRiskAgent.java
+        └── tools/
+            ├── AmountSpikeTool.java
+            ├── GeoDistanceTool.java
+            ├── VelocityTool.java
+            ├── RareMccTool.java
+            ├── TimeWindowTool.java
+            ├── ScoreBlenderTool.java
+            └── behavioral/
+                ├── AmountDeviationSignal.java
+                ├── TimeDeviationSignal.java
+                ├── GeoDeviationSignal.java
+                ├── NewDeviceSignal.java
+                ├── NewIpRangeSignal.java
+                ├── MerchantNoveltySignal.java
+                ├── BurstActivitySignal.java
+                └── BehavioralScoreBlender.java
 ```
 
 ---
 
 ## 🔧 Dependencies
 
-| Dependency              | Version | Purpose                          |
-|-------------------------|---------|----------------------------------|
-| `google-adk`            | 0.1.0   | Google ADK core framework        |
-| `google-adk-dev`        | 0.1.0   | ADK development tools            |
-| `jackson-databind`      | 2.17.2  | JSON serialization               |
+| Dependency         | Version | Purpose                    |
+|--------------------|---------|----------------------------|
+| `google-adk`       | 0.6.0   | Google ADK core framework  |
+| `google-adk-dev`   | 0.6.0   | ADK development tools      |
+| `jackson-databind` | 2.17.2  | JSON serialization         |
 
 ---
 
@@ -114,10 +205,8 @@ mvn test jacoco:report
 
 ## 🐛 Troubleshooting
 
-| Issue                              | Solution                                                      |
-|------------------------------------|---------------------------------------------------------------|
-| `MCP_TOOLBOX_URL not set`          | Export the env var or ensure MCP server is running on `:5000` |
-| `Connection refused` to MCP        | Start MCP toolbox server: `mcp-toolbox serve`                 |
-| `GOOGLE_APPLICATION_CREDENTIALS`   | Set path to valid GCP service account JSON                    |
-| Maven build fails                  | Ensure Java 17+ is active: `java -version`                    |
-
+| Issue                            | Solution                                              |
+|----------------------------------|-------------------------------------------------------|
+| `GOOGLE_APPLICATION_CREDENTIALS` | Set path to valid GCP service account JSON            |
+| Maven build fails                | Ensure Java 17+ is active: `java -version`            |
+| Agent not responding             | Check Gemini API quota and network connectivity       |

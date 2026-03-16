@@ -29,9 +29,15 @@
                 </configuration>
               <executions>
                 <execution>
-                  <id>run</id>
+                  <id>pattern-analyzer</id>
                   <configuration>
-                    <mainClass>com.google.adk.samples.agents.softwarebugassistant.SoftwareBugAssistant</mainClass>
+                    <mainClass>com.ing.sentinel.agents.TransactionPatternAnalyzer</mainClass>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>behavioral-risk</id>
+                  <configuration>
+                    <mainClass>com.ing.sentinel.agents.BehavioralRiskDetector</mainClass>
                   </configuration>
                 </execution>
               </executions>
@@ -49,12 +55,12 @@
         <dependency>
             <groupId>com.google.adk</groupId>
             <artifactId>google-adk</artifactId>
-            <version>0.1.0</version>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.adk</groupId>
             <artifactId>google-adk-dev</artifactId>
-            <version>0.1.0</version>
+            <version>0.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
