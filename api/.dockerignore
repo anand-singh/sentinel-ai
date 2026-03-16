@@ -1,0 +1,11 @@
+.dockerignore
+.git
+.gitignore
+.github
+target/
+*.md
+README.md
+Dockerfile*
+.mvn/
+*.log
+.DS_Store

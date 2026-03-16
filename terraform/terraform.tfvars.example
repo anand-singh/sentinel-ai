@@ -1,0 +1,41 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+# Required: Your GCP Project ID
+project_id = "your-gcp-project-id"
+
+# Region for resources
+region = "us-central1"
+
+# Service configuration
+service_name = "sentinel-api"
+image_tag    = "latest"
+
+# Resource limits
+cpu_limit    = "2"
+memory_limit = "2Gi"
+
+# Scaling
+min_instances = 0
+max_instances = 10
+
+# Access control
+allow_unauthenticated = false  # Set to true for public access (dev only)
+
+# Environment variables
+env_vars = {
+  "GEMINI_MODEL"   = "gemini-2.5-flash"
+  "LOG_LEVEL"      = "INFO"
+  "POLICY_VERSION" = "action-policy-2026-03-16"
+}
+
+# Secrets (create these in Secret Manager first)
+# secrets = {
+#   "GEMINI_API_KEY" = "projects/YOUR_PROJECT_ID/secrets/gemini-api-key/versions/latest"
+# }
+
+# Labels
+labels = {
+  "app"         = "sentinel-ai"
+  "environment" = "production"
+  "managed-by"  = "terraform"
+}

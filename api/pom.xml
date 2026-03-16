@@ -55,7 +55,7 @@
                 <execution>
                   <id>orchestrator</id>
                   <configuration>
-                    <mainClass>com.ing.sentinel.agents.SentinelOrchestrator</mainClass>
+                    <mainClass>com.ing.sentinel.orchestrator.SentinelOrchestrator</mainClass>
                   </configuration>
                 </execution>
               </executions>

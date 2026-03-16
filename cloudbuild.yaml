@@ -1,0 +1,50 @@
+steps:
+  # Build with Maven
+  - name: 'maven:3.9-eclipse-temurin-17'
+    entrypoint: mvn
+    args: ['clean', 'package', '-DskipTests']
+    dir: 'api'
+
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:latest'
+      - '-f'
+      - 'api/Dockerfile'
+      - 'api'
+
+  # Push Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentinel-api'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _REGION: us-central1
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s

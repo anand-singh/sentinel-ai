@@ -1,0 +1,81 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  SERVICE_NAME: sentinel-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: |
+          cd api
+          mvn clean package -DskipTests
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sentinel-ai-images/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE_URL -f api/Dockerfile api/
+          docker push $IMAGE_URL
+          echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE_URL }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars "GEMINI_MODEL=gemini-2.5-flash,LOG_LEVEL=INFO,POLICY_VERSION=action-policy-2026-03-16" \
+            --cpu 2 \
+            --memory 2Gi \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300
+
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "Service deployed at: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+      - name: Test deployment
+        run: |
+          sleep 10
+          curl -f ${{ env.SERVICE_URL }}/health || exit 1
