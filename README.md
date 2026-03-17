@@ -4,11 +4,6 @@
 
 ## 🚀 Live Deployment
 
-| Service | URL | Region |
-|---------|-----|--------|
-| **Frontend (Web Dashboard)** | [sentinel-web-113270635078.europe-west4.run.app](https://sentinel-web-113270635078.europe-west4.run.app/) | `europe-west4` |
-| **Backend (API)** | [sentinel-api-113270635078.europe-west4.run.app](https://sentinel-api-113270635078.europe-west4.run.app/) | `europe-west4` |
-
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/anand-singh/sentinel-ai/actions)
 [![Cloud Run - API](https://img.shields.io/badge/Cloud%20Run-API%20Deployed-4285F4?logo=google-cloud)](https://sentinel-api-113270635078.europe-west4.run.app/health)
 [![Cloud Run - Web](https://img.shields.io/badge/Cloud%20Run-Web%20Deployed-4285F4?logo=google-cloud)](https://sentinel-web-113270635078.europe-west4.run.app/)
@@ -51,27 +46,27 @@
 
 ## Agent Pipeline
 
-| # | Agent | Status | Responsibility | Tools Count |
-|---|-------|--------|----------------|-------------|
-| — | **SentinelOrchestrator** | ✅ Implemented | Coordinates the pipeline, invokes agents #1-5 in sequence | 5+ coordination tools |
-| 1 | **TransactionPatternAnalyzer** | ✅ Implemented | Detect global anomalies: unusual amounts, rare merchants, impossible travel, velocity bursts | 6 tools |
-| 2 | **BehavioralRiskDetector** | ✅ Implemented | Score deviation from customer's personal historical behavior | 8 tools |
-| 3 | **EvidenceBuilderAgent** | ✅ Implemented | Produce deterministic, audit-ready explanation bundle | Evidence building tools |
-| 4 | **AggregatedRiskScorer** | ✅ Implemented | Combine pattern + behavioral scores with policy weights into final 0–100 score | Scoring & calibration tools |
-| 5 | **ActionExecutor** | ✅ Implemented | Execute policy-approved actions via explicit tools | Action execution tools |
+| #   | Agent                          | Status         | Responsibility                                                                               | Tools Count                 |
+| --- | ------------------------------ | -------------- | -------------------------------------------------------------------------------------------- | --------------------------- |
+| —   | **SentinelOrchestrator**       | ✅ Implemented | Coordinates the pipeline, invokes agents #1-5 in sequence                                    | 5+ coordination tools       |
+| 1   | **TransactionPatternAnalyzer** | ✅ Implemented | Detect global anomalies: unusual amounts, rare merchants, impossible travel, velocity bursts | 6 tools                     |
+| 2   | **BehavioralRiskDetector**     | ✅ Implemented | Score deviation from customer's personal historical behavior                                 | 8 tools                     |
+| 3   | **EvidenceBuilderAgent**       | ✅ Implemented | Produce deterministic, audit-ready explanation bundle                                        | Evidence building tools     |
+| 4   | **AggregatedRiskScorer**       | ✅ Implemented | Combine pattern + behavioral scores with policy weights into final 0–100 score               | Scoring & calibration tools |
+| 5   | **ActionExecutor**             | ✅ Implemented | Execute policy-approved actions via explicit tools                                           | Action execution tools      |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| AI / Agents | Google ADK 0.9.0, Gemini 2.5 Flash |
-| Agent Runtime | Java 17, Maven 3.8+, ADK InMemoryRunner |
-| Agent Tools | FunctionTool, deterministic calculations (z-score, Haversine, etc.) |
-| Frontend | Next.js 16, React 19, TypeScript 5 |
-| Cloud | Google Cloud Platform, Vertex AI API |
-| Containers | Docker, eclipse-temurin:17-jre-alpine |
+| Layer         | Technology                                                          |
+| ------------- | ------------------------------------------------------------------- |
+| AI / Agents   | Google ADK 0.9.0, Gemini 2.5 Flash                                  |
+| Agent Runtime | Java 17, Maven 3.8+, ADK InMemoryRunner                             |
+| Agent Tools   | FunctionTool, deterministic calculations (z-score, Haversine, etc.) |
+| Frontend      | Next.js 16, React 19, TypeScript 5                                  |
+| Cloud         | Google Cloud Platform, Vertex AI API                                |
+| Containers    | Docker, eclipse-temurin:17-jre-alpine                               |
 
 ---
 
@@ -94,8 +89,9 @@ mvn compile exec:java@orchestrator
 ```
 
 **Example interaction:**
+
 ```
-You > Analyze transaction: customer=CUST-123, amount=1500 EUR, 
+You > Analyze transaction: customer=CUST-123, amount=1500 EUR,
       merchant=electronics, country=NG, time=2026-03-17T03:00:00Z
 
 Agent > 🚀 Running 5-agent pipeline...
@@ -104,7 +100,7 @@ Agent > 🚀 Running 5-agent pipeline...
         ✅ Evidence Builder: evidence compiled
         ✅ Aggregated Scorer: final_score=92, severity=CRITICAL
         ✅ Action Executor: BLOCK_AND_NOTIFY executed
-        
+
         📊 Final Decision: BLOCK transaction, notify security team
 ```
 
@@ -140,6 +136,7 @@ GET /api/alerts?page=1&limit=10&severity=CRITICAL&status=REVIEWING&q=sarah
 ```
 
 Response:
+
 ```json
 {
   "data": [
@@ -203,12 +200,12 @@ GET /health
 
 ## Dashboard Features
 
-| Page | Description |
-|------|-------------|
-| **Dashboard** | Live KPI cards · risk score gauge · fraud trend chart · agent reason chain (with Approve / Reject Case buttons) · recent alerts queue (rows navigate to case detail) |
-| **Case Detail** | Full case view: alert metadata · per-agent outputs (tabbed) · executed actions · interactive audit timeline · quick-action panel (assign / note / escalate / close) |
-| **Analytics** | Alerts by severity · 30-day trend · top fraud flags · avg time-to-close · escalation rate |
-| **Admin** | Policy version · agent versions · alert routing thresholds · system config (read-only) |
+| Page            | Description                                                                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard**   | Live KPI cards · risk score gauge · fraud trend chart · agent reason chain (with Approve / Reject Case buttons) · recent alerts queue (rows navigate to case detail) |
+| **Case Detail** | Full case view: alert metadata · per-agent outputs (tabbed) · executed actions · interactive audit timeline · quick-action panel (assign / note / escalate / close)  |
+| **Analytics**   | Alerts by severity · 30-day trend · top fraud flags · avg time-to-close · escalation rate                                                                            |
+| **Admin**       | Policy version · agent versions · alert routing thresholds · system config (read-only)                                                                               |
 
 **Ingest modal** — Submit a raw transaction JSON from the dashboard. The 5-agent pipeline runs and the new case opens automatically.
 
@@ -222,18 +219,18 @@ Both services deploy automatically to Cloud Run via GitHub Actions on push to `m
 
 ### Required GitHub Secrets
 
-| Secret | Description |
-|--------|-------------|
-| `GCP_PROJECT_ID` | Google Cloud project ID |
-| `GCP_SA_KEY` | GitHub Actions service account key (JSON) |
-| `SENTINEL_API_URL` | Public Cloud Run URL of `sentinel-api` |
+| Secret             | Description                               |
+| ------------------ | ----------------------------------------- |
+| `GCP_PROJECT_ID`   | Google Cloud project ID                   |
+| `GCP_SA_KEY`       | GitHub Actions service account key (JSON) |
+| `SENTINEL_API_URL` | Public Cloud Run URL of `sentinel-api`    |
 
 ### Cloud Run service configuration
 
-| Service | CPU | Memory | Min instances | Max instances | Timeout |
-|---------|-----|--------|---------------|---------------|---------|
-| `sentinel-api` | 2 | 2 Gi | 0 | 8 | 300 s |
-| `sentinel-web` | 1 | 512 Mi | 0 | 4 | 60 s |
+| Service        | CPU | Memory | Min instances | Max instances | Timeout |
+| -------------- | --- | ------ | ------------- | ------------- | ------- |
+| `sentinel-api` | 2   | 2 Gi   | 0             | 8             | 300 s   |
+| `sentinel-web` | 1   | 512 Mi | 0             | 4             | 60 s    |
 
 `GEMINI_API_KEY` is injected from Secret Manager at runtime — never stored in environment variables or source code.
 
@@ -243,19 +240,19 @@ Both services deploy automatically to Cloud Run via GitHub Actions on push to `m
 
 ### Java API (`sentinel-api`)
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `8080` | HTTP server port |
-| `GEMINI_API_KEY` | — | Gemini API key (required for pipeline) |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model name |
-| `LOG_LEVEL` | `INFO` | Application log level |
-| `POLICY_VERSION` | `action-policy-2026-03-16` | Active action policy version |
+| Variable         | Default                    | Description                            |
+| ---------------- | -------------------------- | -------------------------------------- |
+| `PORT`           | `8080`                     | HTTP server port                       |
+| `GEMINI_API_KEY` | —                          | Gemini API key (required for pipeline) |
+| `GEMINI_MODEL`   | `gemini-2.5-flash`         | Gemini model name                      |
+| `LOG_LEVEL`      | `INFO`                     | Application log level                  |
+| `POLICY_VERSION` | `action-policy-2026-03-16` | Active action policy version           |
 
 ### Next.js Frontend (`sentinel-web`)
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SENTINEL_API_URL` | `""` | Java API base URL. Empty = use in-memory mock. |
+| Variable           | Default | Description                                    |
+| ------------------ | ------- | ---------------------------------------------- |
+| `SENTINEL_API_URL` | `""`    | Java API base URL. Empty = use in-memory mock. |
 
 ---
 
