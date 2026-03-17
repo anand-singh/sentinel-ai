@@ -66,12 +66,16 @@ public class TimeWindowTool {
         // Calculate normalized signal [0,1]
         double normalizedSignal = calculateNormalizedSignal(isUnusualHour, isTypicalForCustomer, isTypicalForMcc, isWeekend);
         
+        // Calculate hour deviation (how far from typical hours)
+        double hourDeviation = calculateHourDeviation(hour, customerTypicalHours, isTypicalForCustomer);
+        
         result.put("transaction_hour", hour);
         result.put("day_of_week", txTime.getDayOfWeek().toString());
         result.put("is_weekend", isWeekend);
         result.put("is_unusual_hour", isUnusualHour);
         result.put("is_typical_for_customer", isTypicalForCustomer);
         result.put("is_typical_for_mcc", isTypicalForMcc);
+        result.put("hour_deviation", Math.round(hourDeviation * 1000.0) / 1000.0);
         result.put("normalized_signal", Math.round(normalizedSignal * 1000.0) / 1000.0);
         result.put("flag", flagRaised ? "UNUSUAL_TIME" : null);
         result.put("flag_raised", flagRaised);
@@ -108,6 +112,43 @@ public class TimeWindowTool {
             }
         }
         return false;
+    }
+    
+    /**
+     * Calculate hour deviation from customer's typical hours [0,1]
+     */
+    private static double calculateHourDeviation(int hour, String customerTypicalHours, boolean isTypical) {
+        if (isTypical) {
+            return 0.0; // No deviation if it's a typical hour
+        }
+        
+        if (customerTypicalHours == null || customerTypicalHours.isEmpty()) {
+            return 0.5; // Unknown baseline
+        }
+        
+        // Parse customer typical hours
+        String[] hours = customerTypicalHours.split(",");
+        if (hours.length == 0) {
+            return 0.5;
+        }
+        
+        // Find minimum distance to any typical hour
+        int minDistance = 24;
+        for (String h : hours) {
+            try {
+                int typicalHour = Integer.parseInt(h.trim());
+                int distance = Math.min(
+                    Math.abs(hour - typicalHour),
+                    24 - Math.abs(hour - typicalHour) // Circular distance
+                );
+                minDistance = Math.min(minDistance, distance);
+            } catch (NumberFormatException e) {
+                // Skip invalid entries
+            }
+        }
+        
+        // Normalize to [0,1] where 12 hours away = 1.0
+        return Math.min(1.0, minDistance / 12.0);
     }
     
     /**

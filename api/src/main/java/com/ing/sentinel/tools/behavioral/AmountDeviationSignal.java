@@ -52,6 +52,7 @@ public class AmountDeviationSignal {
         // Flag if significantly above customer's normal
         boolean flagRaised = Math.abs(zScore) >= AMOUNT_DEVIATION_THRESHOLD;
         
+        result.put("z_score", Math.round(zScore * 100.0) / 100.0);
         result.put("amount_zscore_customer", Math.round(zScore * 100.0) / 100.0);
         result.put("normalized_signal", Math.round(normalizedSignal * 1000.0) / 1000.0);
         result.put("flag", flagRaised ? "AMOUNT_DEVIATION" : null);
