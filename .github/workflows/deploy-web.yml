@@ -5,14 +5,15 @@ on:
     branches:
       - main
     paths:
-      - 'web/**'
-      - '.github/workflows/deploy-web.yml'
+      - "web/**"
+      - ".github/workflows/deploy-web.yml"
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-central1
+  REGION: europe-west4
   SERVICE_NAME: sentinel-web
+  API_URL: https://sentinel-api-113270635078.europe-west4.run.app
 
 jobs:
   deploy:
@@ -29,16 +30,38 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sentinel-ai-images/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE_URL web/
+          docker push $IMAGE_URL
+          echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
+
       - name: Deploy to Cloud Run
         run: |
-          cd web
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --source . \
+            --image ${{ env.IMAGE_URL }} \
             --region ${{ env.REGION }} \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars "SENTINEL_API_URL=${{ env.API_URL }}" \
+            --cpu 1 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 4 \
+            --timeout 120
+
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "Service deployed at: $SERVICE_URL"

@@ -16,6 +16,9 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>17</release>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <!-- ADK CLI  -->
@@ -24,10 +27,16 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                    <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                     <classpathScope>compile</classpathScope>
                 </configuration>
               <executions>
+                <execution>
+                  <id>dev-ui</id>
+                  <configuration>
+                    <mainClass>com.ing.sentinel.SentinelDevServer</mainClass>
+                  </configuration>
+                </execution>
                 <execution>
                   <id>pattern-analyzer</id>
                   <configuration>
@@ -55,26 +64,32 @@
                 <execution>
                   <id>orchestrator</id>
                   <configuration>
-                    <mainClass>com.ing.sentinel.orchestrator.SentinelOrchestrator</mainClass>
+                    <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                   </configuration>
                 </execution>
               </executions>
             </plugin>
-            <!-- Spring Boot plugin to build a runnable fat jar containing all ADK dependencies -->
+            <!-- Spring Boot plugin to build a runnable fat jar — must match runtime (ADK ships 4.0.2) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.3</version> <!-- Common stable version, doesn't need to strictly match the internal framework via ADK -->
+                <version>4.0.2</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
                         <configuration>
-                            <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                            <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Maven Surefire Plugin for running JUnit 5 tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
             </plugin>
 
         </plugins>
@@ -113,6 +128,50 @@
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-logging</artifactId>
             <version>1.43.0</version>
+        </dependency>
+
+        <!-- JUnit 5 for testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.25.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.13.3</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

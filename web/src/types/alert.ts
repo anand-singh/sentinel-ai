@@ -48,6 +48,7 @@ export interface Alert {
   status: AlertStatus
   recommendedAction: string
   timestamp: string
+  caseId?: string
 }
 
 // ─── Full Case Detail ─────────────────────────────────────────────────────────────

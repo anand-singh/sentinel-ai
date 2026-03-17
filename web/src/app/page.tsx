@@ -3,11 +3,17 @@ import { CaseRiskScore } from '@/components/dashboard/CaseRiskScore'
 import { FraudTrends } from '@/components/dashboard/FraudTrends'
 import { ReasonChain } from '@/components/dashboard/ReasonChain'
 import { RecentAlerts } from '@/components/dashboard/RecentAlerts'
+import { IngestTransactionModal } from '@/components/dashboard/IngestTransactionModal'
 
 export default function Home() {
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-4">
-      <SummaryCards />
+      <div className="flex items-center justify-between">
+        <SummaryCards />
+        <div className="shrink-0 pl-4">
+          <IngestTransactionModal />
+        </div>
+      </div>
       
       <div className="grid grid-cols-12 gap-4">
         {/* Left Column (Approx 3.5/12 width) */}

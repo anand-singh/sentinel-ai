@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12">
+
+  <!-- Background -->
+  <rect width="1000" height="900" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="500" y="36" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">Sentinel AI — System Architecture</text>
+
+  <!-- ═══════════════════ BROWSER LAYER ═══════════════════ -->
+  <rect x="30" y="60" width="940" height="90" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="50" y="82" font-size="10" font-weight="bold" fill="#0369a1" letter-spacing="1">ANALYST BROWSER</text>
+
+  <!-- Browser boxes -->
+  <rect x="60"  y="90" width="180" height="44" rx="6" fill="#fff" stroke="#0284c7" stroke-width="1"/>
+  <text x="150" y="116" text-anchor="middle" font-weight="bold" fill="#0369a1">Dashboard</text>
+
+  <rect x="270" y="90" width="180" height="44" rx="6" fill="#fff" stroke="#0284c7" stroke-width="1"/>
+  <text x="360" y="116" text-anchor="middle" font-weight="bold" fill="#0369a1">Case Detail</text>
+
+  <rect x="480" y="90" width="180" height="44" rx="6" fill="#fff" stroke="#0284c7" stroke-width="1"/>
+  <text x="570" y="116" text-anchor="middle" font-weight="bold" fill="#0369a1">Analytics</text>
+
+  <rect x="690" y="90" width="230" height="44" rx="6" fill="#fff" stroke="#0284c7" stroke-width="1"/>
+  <text x="805" y="116" text-anchor="middle" font-weight="bold" fill="#0369a1">Ingest Transaction</text>
+
+  <!-- Arrow browser → web -->
+  <line x1="500" y1="150" x2="500" y2="178" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="510" y="168" font-size="10" fill="#64748b">HTTP /api/*</text>
+
+  <!-- ═══════════════════ NEXT.JS LAYER ═══════════════════ -->
+  <rect x="30" y="180" width="940" height="120" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="50" y="200" font-size="10" font-weight="bold" fill="#15803d" letter-spacing="1">NEXT.JS FRONTEND  (Cloud Run: sentinel-web · 1 CPU · 512 Mi)</text>
+
+  <text x="50" y="220" font-size="11" fill="#166534">Next.js 16 App Router · React 19 · TypeScript · Tailwind CSS 4</text>
+
+  <!-- API route badges -->
+  <rect x="50"  y="232" width="130" height="22" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <text x="115" y="248" text-anchor="middle" font-size="10" fill="#166534">GET /api/alerts</text>
+
+  <rect x="192" y="232" width="150" height="22" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <text x="267" y="248" text-anchor="middle" font-size="10" fill="#166534">GET /api/cases/[id]</text>
+
+  <rect x="354" y="232" width="200" height="22" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <text x="454" y="248" text-anchor="middle" font-size="10" fill="#166534">POST /api/cases/[id]/assign|note…</text>
+
+  <rect x="566" y="232" width="150" height="22" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <text x="641" y="248" text-anchor="middle" font-size="10" fill="#166534">GET /api/analytics</text>
+
+  <rect x="728" y="232" width="130" height="22" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <text x="793" y="248" text-anchor="middle" font-size="10" fill="#166534">POST /api/ingest</text>
+
+  <text x="50" y="285" font-size="11" fill="#166534">SENTINEL_API_URL env var → proxied server-side (browser never calls Java directly)</text>
+
+  <!-- Arrow web → api -->
+  <line x1="500" y1="300" x2="500" y2="328" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="510" y="318" font-size="10" fill="#64748b">server-to-server</text>
+
+  <!-- ═══════════════════ SPRING BOOT LAYER ═══════════════════ -->
+  <rect x="30" y="330" width="940" height="120" rx="8" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="50" y="350" font-size="10" font-weight="bold" fill="#92400e" letter-spacing="1">SPRING BOOT REST API  (Cloud Run: sentinel-api · 2 CPU · 2 Gi)</text>
+
+  <text x="50" y="370" font-size="11" fill="#78350f">Java 17 · Spring Boot 4.0.2 · Google ADK 0.9.0 · Jackson 2.17</text>
+
+  <!-- Controller + Store boxes -->
+  <rect x="50"  y="382" width="290" height="50" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1"/>
+  <text x="195" y="400" text-anchor="middle" font-weight="bold" fill="#92400e">SentinelApiController</text>
+  <text x="195" y="420" text-anchor="middle" font-size="10" fill="#92400e">/health · /alerts · /cases/{id} · /analytics · /ingest</text>
+
+  <rect x="360" y="382" width="290" height="50" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1"/>
+  <text x="505" y="400" text-anchor="middle" font-weight="bold" fill="#92400e">CaseStoreService</text>
+  <text x="505" y="420" text-anchor="middle" font-size="10" fill="#92400e">ConcurrentHashMap (alerts + cases) · pre-seeded</text>
+
+  <rect x="670" y="382" width="270" height="50" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1"/>
+  <text x="805" y="400" text-anchor="middle" font-weight="bold" fill="#92400e">OrchestratorService</text>
+  <text x="805" y="420" text-anchor="middle" font-size="10" fill="#92400e">ADK InMemoryRunner · 90 s timeout</text>
+
+  <!-- Arrow api → pipeline -->
+  <line x1="805" y1="450" x2="805" y2="480" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="500" y1="450" x2="500" y2="480" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- ═══════════════════ PIPELINE LAYER ═══════════════════ -->
+  <rect x="30" y="480" width="940" height="310" rx="8" fill="#fdf2f8" stroke="#9333ea" stroke-width="1.5"/>
+  <text x="50" y="500" font-size="10" font-weight="bold" fill="#7e22ce" letter-spacing="1">5-AGENT FRAUD DETECTION PIPELINE  (Google ADK + Gemini 2.5 Flash)</text>
+
+  <!-- Orchestrator -->
+  <rect x="300" y="512" width="400" height="36" rx="6" fill="#e9d5ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="500" y="534" text-anchor="middle" font-weight="bold" fill="#4c1d95">SentinelOrchestrator  (coordinator, ROOT_AGENT)</text>
+
+  <!-- Connector lines from orchestrator to agents -->
+  <line x1="500" y1="548" x2="500" y2="570" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+  <!-- Agent 1 -->
+  <rect x="30"  y="570" width="180" height="70" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="120" y="590" text-anchor="middle" font-weight="bold" font-size="11" fill="#4c1d95">#1 Pattern Analyzer</text>
+  <text x="120" y="606" text-anchor="middle" font-size="9" fill="#6b21a8">AmountSpike · GeoDistance</text>
+  <text x="120" y="620" text-anchor="middle" font-size="9" fill="#6b21a8">Velocity · TimeWindow</text>
+  <text x="120" y="634" text-anchor="middle" font-size="9" fill="#dc2626">→ risk_score · flags[]</text>
+
+  <!-- Agent 2 -->
+  <rect x="228" y="570" width="180" height="70" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="318" y="590" text-anchor="middle" font-weight="bold" font-size="11" fill="#4c1d95">#2 Behavioral Risk</text>
+  <text x="318" y="606" text-anchor="middle" font-size="9" fill="#6b21a8">AmountDeviation · NewDevice</text>
+  <text x="318" y="620" text-anchor="middle" font-size="9" fill="#6b21a8">GeoDeviation · BurstActivity</text>
+  <text x="318" y="634" text-anchor="middle" font-size="9" fill="#dc2626">→ behavioral_score · flags[]</text>
+
+  <!-- Agent 3 -->
+  <rect x="426" y="570" width="180" height="70" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="516" y="590" text-anchor="middle" font-weight="bold" font-size="11" fill="#4c1d95">#3 Evidence Builder</text>
+  <text x="516" y="606" text-anchor="middle" font-size="9" fill="#6b21a8">FlagMerger</text>
+  <text x="516" y="620" text-anchor="middle" font-size="9" fill="#6b21a8">SummaryComposer · EvidenceBuilder</text>
+  <text x="516" y="634" text-anchor="middle" font-size="9" fill="#dc2626">→ evidence_summary · audit bundle</text>
+
+  <!-- Agent 4 -->
+  <rect x="624" y="570" width="180" height="70" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="714" y="590" text-anchor="middle" font-weight="bold" font-size="11" fill="#4c1d95">#4 Risk Scorer</text>
+  <text x="714" y="606" text-anchor="middle" font-size="9" fill="#6b21a8">ScoreCalibrator · RiskBooster</text>
+  <text x="714" y="620" text-anchor="middle" font-size="9" fill="#6b21a8">SeverityClassifier</text>
+  <text x="714" y="634" text-anchor="middle" font-size="9" fill="#dc2626">→ final_risk_score (0–100)</text>
+
+  <!-- Agent 5 -->
+  <rect x="822" y="570" width="148" height="70" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="896" y="590" text-anchor="middle" font-weight="bold" font-size="11" fill="#4c1d95">#5 Action Executor</text>
+  <text x="896" y="606" text-anchor="middle" font-size="9" fill="#6b21a8">FreezeTransaction</text>
+  <text x="896" y="620" text-anchor="middle" font-size="9" fill="#6b21a8">NotifySecurityTeam</text>
+  <text x="896" y="634" text-anchor="middle" font-size="9" fill="#dc2626">→ executed_actions[]</text>
+
+  <!-- Flow arrows between agents -->
+  <line x1="210" y1="605" x2="228" y2="605" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="408" y1="605" x2="426" y2="605" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="606" y1="605" x2="624" y2="605" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="804" y1="605" x2="822" y2="605" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+  <!-- Result store -->
+  <rect x="250" y="666" width="500" height="36" rx="6" fill="#e9d5ff" stroke="#7c3aed" stroke-width="1"/>
+  <text x="500" y="689" text-anchor="middle" font-weight="bold" fill="#4c1d95">OrchestratorResult → CaseStoreService.putCase() + putAlert()</text>
+
+  <!-- Arrows agents to result -->
+  <line x1="120"  y1="640" x2="120"  y2="760" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="318"  y1="640" x2="318"  y2="684" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="500"  y1="640" x2="500"  y2="666" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+  <line x1="714"  y1="640" x2="714"  y2="684" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="896"  y1="640" x2="896"  y2="760" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Severity scale -->
+  <text x="50" y="740" font-size="10" font-weight="bold" fill="#7e22ce">Risk Score → Severity:</text>
+  <rect x="50"  y="748" width="70" height="18" rx="3" fill="#d1fae5"/>
+  <text x="85"  y="761" text-anchor="middle" font-size="9" fill="#065f46">0–30 LOW</text>
+  <rect x="128" y="748" width="85" height="18" rx="3" fill="#fef9c3"/>
+  <text x="170" y="761" text-anchor="middle" font-size="9" fill="#78350f">31–60 MEDIUM</text>
+  <rect x="221" y="748" width="70" height="18" rx="3" fill="#fed7aa"/>
+  <text x="256" y="761" text-anchor="middle" font-size="9" fill="#9a3412">61–80 HIGH</text>
+  <rect x="299" y="748" width="85" height="18" rx="3" fill="#fecaca"/>
+  <text x="341" y="761" text-anchor="middle" font-size="9" fill="#991b1b">81–100 CRITICAL</text>
+
+  <!-- Case lifecycle -->
+  <text x="500" y="740" font-size="10" font-weight="bold" fill="#7e22ce">Case lifecycle:</text>
+  <rect x="500"  y="748" width="65" height="18" rx="3" fill="#dbeafe"/>
+  <text x="532"  y="761" text-anchor="middle" font-size="9" fill="#1e40af">OPEN</text>
+  <text x="572"  y="761" font-size="9" fill="#7c3aed">→</text>
+  <rect x="582"  y="748" width="80" height="18" rx="3" fill="#fef9c3"/>
+  <text x="622"  y="761" text-anchor="middle" font-size="9" fill="#78350f">IN_REVIEW</text>
+  <text x="668"  y="761" font-size="9" fill="#7c3aed">→</text>
+  <rect x="678"  y="748" width="85" height="18" rx="3" fill="#fed7aa"/>
+  <text x="720"  y="761" text-anchor="middle" font-size="9" fill="#9a3412">ESCALATED</text>
+  <text x="769"  y="761" font-size="9" fill="#7c3aed">→</text>
+  <rect x="779"  y="748" width="70" height="18" rx="3" fill="#d1fae5"/>
+  <text x="814"  y="761" text-anchor="middle" font-size="9" fill="#065f46">CLOSED</text>
+
+  <!-- ═══════════════════ GCP LAYER ═══════════════════ -->
+  <rect x="30" y="800" width="940" height="76" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+  <text x="50" y="820" font-size="10" font-weight="bold" fill="#334155" letter-spacing="1">GOOGLE CLOUD PLATFORM</text>
+
+  <rect x="50"  y="830" width="155" height="30" rx="4" fill="#fff" stroke="#475569" stroke-width="1"/>
+  <text x="127" y="850" text-anchor="middle" font-size="10" fill="#334155">Cloud Run (2 services)</text>
+
+  <rect x="215" y="830" width="155" height="30" rx="4" fill="#fff" stroke="#475569" stroke-width="1"/>
+  <text x="292" y="850" text-anchor="middle" font-size="10" fill="#334155">Artifact Registry</text>
+
+  <rect x="380" y="830" width="155" height="30" rx="4" fill="#fff" stroke="#475569" stroke-width="1"/>
+  <text x="457" y="850" text-anchor="middle" font-size="10" fill="#334155">Secret Manager</text>
+
+  <rect x="545" y="830" width="155" height="30" rx="4" fill="#fff" stroke="#475569" stroke-width="1"/>
+  <text x="622" y="850" text-anchor="middle" font-size="10" fill="#334155">Cloud Logging</text>
+
+  <rect x="710" y="830" width="240" height="30" rx="4" fill="#fff" stroke="#475569" stroke-width="1"/>
+  <text x="830" y="850" text-anchor="middle" font-size="10" fill="#334155">GitHub Actions CI/CD</text>
+
+  <!-- Arrow from store to gcp -->
+  <line x1="500" y1="702" x2="500" y2="800" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══════════════════ DEFS ═══════════════════ -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+</svg>

@@ -5,14 +5,20 @@ import { AgentTabs } from '@/components/dashboard/AgentTabs'
 import { AuditTimeline } from '@/components/dashboard/AuditTimeline'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import { CaseDetail } from '@/types/alert'
+import { isApiConnected, proxyGet } from '@/lib/apiProxy'
+import { db } from '@/lib/mockDb'
 
 async function getCaseDetail(id: string): Promise<CaseDetail | null> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/cases/${id}`,
-    { cache: 'no-store' }
-  )
-  if (!res.ok) return null
-  return res.json()
+  if (isApiConnected()) {
+    try {
+      const res = await proxyGet(`/api/cases/${id}`)
+      if (res.ok) return res.json()
+      if (res.status === 404) return null
+    } catch {
+      // fall through to mock
+    }
+  }
+  return db.cases.find(c => c.caseId === id) ?? null
 }
 
 const severityColors: Record<string, string> = {

@@ -79,6 +79,130 @@ The second agent in Sentinel's fraud pipeline. Scores how unusual a transaction 
 
 ---
 
+### Evidence Builder Agent
+
+The third agent in Sentinel's fraud pipeline. Combines outputs from upstream agents (Pattern Analyzer, Behavioral Risk, AML/Compliance) and produces clear, auditable, human-readable explanations.
+
+> This agent **does not score or take actions**. It **aggregates, normalizes, and explains**.
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `merge_flags` | Combines flags from all upstream agents |
+| `compose_summary` | Generates human-readable summary |
+| `build_evidence_bundle` | Creates audit-ready evidence package |
+
+**Output:**
+
+```json
+{
+  "evidence_summary": "High amount (3.2σ above customer baseline), new device, transaction at 3am (customer's sleep hours), traveled 520km in 2 hours",
+  "combined_flags": ["AMOUNT_SPIKE", "AMOUNT_DEVIATION", "NEW_DEVICE", "UNUSUAL_TIME", "GEO_DEVIATION"],
+  "flag_sources": {
+    "pattern_agent": ["AMOUNT_SPIKE", "GEO_MISMATCH"],
+    "behavioral_agent": ["AMOUNT_DEVIATION", "NEW_DEVICE", "UNUSUAL_TIME"]
+  },
+  "audit_bundle": {
+    "decision_tree": "...",
+    "feature_importance": { ... }
+  },
+  "version": "evidence-v1.0.0"
+}
+```
+
+---
+
+### Aggregated Risk Scorer
+
+The fourth agent in Sentinel's fraud pipeline. Combines outputs from all upstream agents and produces a single calibrated risk score (0-100), severity label, and recommended action.
+
+> This agent **does not execute actions**. It only **recommends**. Actions are performed by Agent #5.
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `normalize_score` | Normalizes scores from different agents to common scale |
+| `blend_weighted_scores` | Combines scores using configurable policy weights |
+| `apply_risk_boost` | Applies multipliers for high-severity flag combinations |
+| `calibrate_score` | Calibrates final score using historical data |
+| `classify_severity` | Maps score to severity (MINIMAL/LOW/MEDIUM/HIGH/CRITICAL) |
+
+**Output:**
+
+```json
+{
+  "final_risk_score": 92,
+  "severity": "CRITICAL",
+  "recommended_action": "BLOCK_AND_NOTIFY",
+  "score_breakdown": {
+    "pattern_contribution": 35.2,
+    "behavioral_contribution": 28.8,
+    "evidence_contribution": 15.0,
+    "aml_contribution": 13.0
+  },
+  "policy_weights": {
+    "pattern": 0.40,
+    "behavioral": 0.35,
+    "evidence": 0.15,
+    "aml": 0.10
+  },
+  "version": "aggregator-v1.0.0",
+  "model_version": "agg-v1.0.0"
+}
+```
+
+---
+
+### Action Executor
+
+The fifth and final agent in Sentinel's fraud pipeline. Receives final risk decisions from the Aggregated Risk Scorer and executes **ONLY** approved, policy-governed actions.
+
+> This agent **does NOT score, explain, or improvise**. It executes **only explicitly registered tools** under strict policy control.
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `freeze_transaction` | Freezes/blocks the transaction immediately |
+| `notify_security_team` | Sends alert to security operations team |
+| `create_case_report` | Creates fraud case in case management system |
+| `request_step_up_auth` | Requests additional authentication from customer |
+| `escalate_to_human` | Escalates to human fraud analyst for review |
+
+**Output:**
+
+```json
+{
+  "executed_actions": [
+    {
+      "action": "freeze_transaction",
+      "status": "SUCCESS",
+      "transaction_id": "tx_123",
+      "timestamp": "2026-03-17T14:05:32Z"
+    },
+    {
+      "action": "notify_security_team",
+      "status": "SUCCESS",
+      "notification_id": "notif_789",
+      "timestamp": "2026-03-17T14:05:33Z"
+    },
+    {
+      "action": "create_case_report",
+      "status": "SUCCESS",
+      "case_id": "case_abc123",
+      "timestamp": "2026-03-17T14:05:34Z"
+    }
+  ],
+  "audit_id": "audit_xyz",
+  "version": "executor-v1.0.0",
+  "policy_version": "action-policy-2026-03-16"
+}
+```
+
+---
+
 ## 🚀 Getting Started (Development)
 
 ### Prerequisites
@@ -155,28 +279,34 @@ docker run -p 8080:8080 \
 api/
 ├── pom.xml
 ├── Dockerfile
-└── src/main/java/
-    ├── SoftwareBugAssistant.java
-    └── com/ing/sentinel/
-        ├── agents/
-        │   ├── TransactionPatternAnalyzer.java
-        │   └── BehavioralRiskAgent.java
-        └── tools/
-            ├── AmountSpikeTool.java
-            ├── GeoDistanceTool.java
-            ├── VelocityTool.java
-            ├── RareMccTool.java
-            ├── TimeWindowTool.java
-            ├── ScoreBlenderTool.java
-            └── behavioral/
-                ├── AmountDeviationSignal.java
-                ├── TimeDeviationSignal.java
-                ├── GeoDeviationSignal.java
-                ├── NewDeviceSignal.java
-                ├── NewIpRangeSignal.java
-                ├── MerchantNoveltySignal.java
-                ├── BurstActivitySignal.java
-                └── BehavioralScoreBlender.java
+└── src/main/java/com/ing/sentinel/
+    ├── agents/
+    │   ├── SentinelOrchestrator.java
+    │   ├── TransactionPatternAnalyzer.java
+    │   ├── BehavioralRiskDetector.java
+    │   ├── EvidenceBuilderAgent.java
+    │   ├── AggregatedRiskScorer.java
+    │   └── ActionExecutor.java
+    └── tools/
+        ├── AmountSpikeTool.java
+        ├── GeoDistanceTool.java
+        ├── VelocityTool.java
+        ├── RareMccTool.java
+        ├── TimeWindowTool.java
+        ├── ScoreBlenderTool.java
+        ├── behavioral/
+        │   ├── AmountDeviationSignal.java
+        │   ├── TimeDeviationSignal.java
+        │   ├── GeoDeviationSignal.java
+        │   ├── NewDeviceSignal.java
+        │   ├── NewIpRangeSignal.java
+        │   ├── MerchantNoveltySignal.java
+        │   ├── BurstActivitySignal.java
+        │   └── BehavioralScoreBlender.java
+        ├── evidence/
+        ├── aggregator/
+        ├── action/
+        └── orchestrator/
 ```
 
 ---
@@ -185,8 +315,8 @@ api/
 
 | Dependency         | Version | Purpose                    |
 |--------------------|---------|----------------------------|
-| `google-adk`       | 0.6.0   | Google ADK core framework  |
-| `google-adk-dev`   | 0.6.0   | ADK development tools      |
+| `google-adk`       | 0.9.0   | Google ADK core framework  |
+| `google-adk-dev`   | 0.9.0   | ADK development tools      |
 | `jackson-databind` | 2.17.2  | JSON serialization         |
 
 ---

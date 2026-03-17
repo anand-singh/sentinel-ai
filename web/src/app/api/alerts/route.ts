@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isApiConnected, proxyGet } from '@/lib/apiProxy'
 import { db } from '@/lib/mockDb'
 
 // GET /api/alerts
 // Supports: ?page=1&limit=10&severity=CRITICAL&status=REVIEWING&q=searchterm
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
+
+  // ── Proxy to Java API when connected ────────────────────────────────────────
+  if (isApiConnected()) {
+    try {
+      const res = await proxyGet('/api/alerts', searchParams)
+      const data = await res.json()
+      return NextResponse.json(data, { status: res.status })
+    } catch (err) {
+      console.error('[alerts] Java API unreachable, falling back to mock:', err)
+    }
+  }
+
+  // ── Mock fallback ────────────────────────────────────────────────────────────
   const page = parseInt(searchParams.get('page') ?? '1', 10)
   const limit = parseInt(searchParams.get('limit') ?? '10', 10)
   const severity = searchParams.get('severity')
