@@ -37,10 +37,10 @@ resource "google_project_iam_member" "secret_accessor" {
   member  = "serviceAccount:${google_service_account.sentinel_api.email}"
 }
 
-# Grant Artifact Registry reader access
-resource "google_project_iam_member" "artifact_reader" {
+# Grant Artifact Registry writer access (includes read permissions)
+resource "google_project_iam_member" "artifact_writer" {
   project = var.project_id
-  role    = "roles/artifactregistry.reader"
+  role    = "roles/artifactregistry.writer"
   member  = "serviceAccount:${google_service_account.sentinel_api.email}"
 }
 
