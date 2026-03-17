@@ -32,6 +32,12 @@
                 </configuration>
               <executions>
                 <execution>
+                  <id>dev-ui</id>
+                  <configuration>
+                    <mainClass>com.ing.sentinel.SentinelDevServer</mainClass>
+                  </configuration>
+                </execution>
+                <execution>
                   <id>pattern-analyzer</id>
                   <configuration>
                     <mainClass>com.ing.sentinel.agents.TransactionPatternAnalyzer</mainClass>
