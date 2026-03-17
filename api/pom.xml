@@ -60,6 +60,22 @@
                 </execution>
               </executions>
             </plugin>
+            <!-- Spring Boot plugin to build a runnable fat jar containing all ADK dependencies -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.2.3</version> <!-- Common stable version, doesn't need to strictly match the internal framework via ADK -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
         </plugins>
     </build>

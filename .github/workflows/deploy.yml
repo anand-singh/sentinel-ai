@@ -60,7 +60,9 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
+            --service-account sentinel-api-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
             --set-env-vars "GEMINI_MODEL=gemini-2.5-flash,LOG_LEVEL=INFO,POLICY_VERSION=action-policy-2026-03-16" \
+            --set-secrets "GEMINI_API_KEY=gemini-api-key:latest" \
             --cpu 2 \
             --memory 2Gi \
             --min-instances 0 \
