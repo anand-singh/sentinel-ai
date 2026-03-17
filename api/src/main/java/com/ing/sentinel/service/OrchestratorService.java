@@ -154,6 +154,10 @@ public class OrchestratorService {
         }
         caseNode.set("auditTrail", auditTrail);
 
+        // Back-fill caseId onto the alert so the frontend can navigate directly
+        alertNode.put("caseId", caseId);
+        store.putAlert(alertNode);
+
         store.putCase(caseNode);
         log.info("Stored new case: " + caseId + " for transaction: " + txId);
         return caseNode;

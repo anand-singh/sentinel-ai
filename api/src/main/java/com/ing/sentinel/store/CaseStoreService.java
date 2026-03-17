@@ -285,6 +285,10 @@ public class CaseStoreService {
                 now.minus(16, ChronoUnit.MINUTES), "CORR-TX9198-001", null)
         ));
         putCase(c2);
+
+        // Back-fill caseId into alerts so the frontend can navigate directly to the case
+        alerts.get("ALERT-001").put("caseId", "F-9204");
+        alerts.get("ALERT-002").put("caseId", "F-9198");
     }
 
     private ObjectNode alert(String id, String txId, String custId, String name,
