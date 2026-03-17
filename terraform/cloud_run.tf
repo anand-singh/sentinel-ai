@@ -6,10 +6,16 @@ resource "google_project_service" "required_apis" {
     "secretmanager.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
+    "cloudbuild.googleapis.com",
   ])
 
   service            = each.value
   disable_on_destroy = false
+}
+
+# Get project details
+data "google_project" "project" {
+  project_id = var.project_id
 }
 
 # Artifact Registry repository
@@ -37,11 +43,20 @@ resource "google_project_iam_member" "secret_accessor" {
   member  = "serviceAccount:${google_service_account.sentinel_api.email}"
 }
 
-# Grant Artifact Registry writer access (includes read permissions)
-resource "google_project_iam_member" "artifact_writer" {
+# Grant Artifact Registry reader access to Cloud Run service account
+resource "google_project_iam_member" "artifact_reader" {
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${google_service_account.sentinel_api.email}"
+}
+
+# Grant Cloud Build service account access to push images to Artifact Registry
+resource "google_project_iam_member" "cloudbuild_artifact_writer" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${google_service_account.sentinel_api.email}"
+  member  = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+
+  depends_on = [google_project_service.required_apis]
 }
 
 # Cloud Run Service
