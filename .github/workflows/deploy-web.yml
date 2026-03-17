@@ -13,6 +13,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
   SERVICE_NAME: sentinel-web
+  API_URL: https://sentinel-api-113270635078.us-central1.run.app
 
 jobs:
   deploy:
@@ -51,7 +52,7 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "SENTINEL_API_URL=${{ secrets.SENTINEL_API_URL }}" \
+            --set-env-vars "SENTINEL_API_URL=${{ env.API_URL }}" \
             --cpu 1 \
             --memory 512Mi \
             --min-instances 0 \
