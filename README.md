@@ -8,108 +8,27 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            ANALYST BROWSER                                  │
-│                                                                              │
-│   ┌─────────────┐  ┌──────────────┐  ┌────────────┐  ┌──────────────────┐  │
-│   │  Dashboard  │  │ Case Detail  │  │ Analytics  │  │ Ingest / Analyze │  │
-│   └──────┬──────┘  └──────┬───────┘  └─────┬──────┘  └────────┬─────────┘  │
-└──────────┼────────────────┼────────────────┼──────────────────┼────────────┘
-           │  browser calls /api/* routes    │                  │
-           ▼                ▼                ▼                  ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│               NEXT.JS FRONTEND  (Cloud Run: sentinel-web)                   │
-│                                                                              │
-│   Next.js 16 App Router · React 19 · TypeScript · Tailwind CSS 4           │
-│                                                                              │
-│   API Routes (BFF / proxy layer — keeps CORS browser-safe)                 │
-│     GET  /api/alerts                GET  /api/analytics                     │
-│     GET  /api/cases/[id]            POST /api/ingest                        │
-│     POST /api/cases/[id]/assign|note|escalate|close                         │
-│                                                                              │
-│   env: SENTINEL_API_URL ─────────────────────────────────────────────┐     │
-└──────────────────────────────────────────────────────────────────────┼─────┘
-                                                                        │
-                      server-to-server (no CORS)                        │
-                                                                        ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│               SPRING BOOT REST API  (Cloud Run: sentinel-api)               │
-│                                                                              │
-│   Java 17 · Spring Boot 4.0.2 · Google ADK 0.9.0 · Jackson 2.17           │
-│                                                                              │
-│   SentinelApiController                                                     │
-│     GET  /health                                                             │
-│     GET  /api/alerts          (paginated, filterable)                       │
-│     GET  /api/cases/{id}                                                    │
-│     POST /api/cases/{id}/assign|note|escalate|close                         │
-│     GET  /api/analytics                                                     │
-│     POST /api/ingest ───────────────────────────────────────────────┐      │
-│                                                                      │      │
-│   CaseStoreService  (ConcurrentHashMap, pre-seeded)                  │      │
-│     alerts: Map<alertId → Alert>                                     │      │
-│     cases:  Map<caseId  → CaseDetail>                                │      │
-└──────────────────────────────────────────────────────────────────────┼──────┘
-                                                                       │
-                         OrchestratorService                           │
-                         (ADK InMemoryRunner)                          │
-                                                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                   5-AGENT FRAUD DETECTION PIPELINE                          │
-│                       (Google ADK + Gemini 2.5 Flash)                       │
-│                                                                              │
-│  Transaction JSON                                                            │
-│       │                                                                      │
-│       ▼                                                                      │
-│  ┌──────────────────────────────────────────────────────────────────┐       │
-│  │  SentinelOrchestrator  (coordinator — does not score or act)     │       │
-│  │  Runs agents #1–5 in sequence via ADK InMemoryRunner + Gemini    │       │
-│  └──┬───────────────────────────────────────────────────────────────┘       │
-│     │                                                                        │
-│     ▼                                                                        │
-│  Agent #1  TransactionPatternAnalyzer                                        │
-│  Tools:    AmountSpike · GeoDistance · RareMcc · Velocity ·                 │
-│            TimeWindow · ScoreBlender                                         │
-│  Output:   risk_score (0–100) · flags[] · reasoning                         │
-│     │                                                                        │
-│     ▼                                                                        │
-│  Agent #2  BehavioralRiskDetector                                            │
-│  Tools:    AmountDeviation · TimeDeviation · GeoDeviation · NewDevice ·     │
-│            NewIpRange · MerchantNovelty · BurstActivity · ScoreBlender      │
-│  Output:   behavioral_risk_score · flags[] · contributions                  │
-│     │                                                                        │
-│     ▼                                                                        │
-│  Agent #3  EvidenceBuilderAgent                                              │
-│  Tools:    FlagMerger · SummaryComposer · EvidenceBuilder                   │
-│  Output:   evidence_summary · combined_flags[] · audit bundle               │
-│     │                                                                        │
-│     ▼                                                                        │
-│  Agent #4  AggregatedRiskScorer                                              │
-│  Tools:    RiskBooster · ScoreCalibrator · ScoreNormalizer ·                │
-│            SeverityClassifier · WeightedScoreBlender                         │
-│  Output:   final_risk_score · severity (LOW/MED/HIGH/CRITICAL) ·            │
-│            recommended_action                                                │
-│     │                                                                        │
-│     ▼                                                                        │
-│  Agent #5  ActionExecutor                                                    │
-│  Tools:    FreezeTransaction · NotifySecurityTeam · RequestStepUpAuth ·     │
-│            EscalateToHuman · CreateCaseReport                                │
-│  Output:   executed_actions[] · audit_id                                    │
-│     │                                                                        │
-│     └──────────────► OrchestratorResult JSON                                │
-│                             │                                                │
-│                             ▼                                                │
-│                   CaseStoreService.putCase()                                 │
-│                   CaseStoreService.putAlert()                                │
+│              FRAUD DETECTION AGENTS (Google ADK + Gemini)                   │
+│                                                                             │
+│  Agent #1: TransactionPatternAnalyzer                                       │
+│                                                                             │
+│  Agent #2: BehavioralRiskAgent                                              │
+│                                                                             │
+│  Agent #3: EvidenceBuilder                                                  │
+│                                                                             │
+│  Agent #4: AggregatedRiskScorer                                             │
+│                                                                             │
+│  Agent #5: ActionExecutor                                                   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        GOOGLE CLOUD PLATFORM                                │
-│                                                                              │
-│   Cloud Run         sentinel-api · sentinel-web                             │
-│   Artifact Registry sentinel-ai-images                                      │
-│   Secret Manager    gemini-api-key                                          │
-│   Cloud Logging     structured logs from both services                      │
-│   GitHub Actions    deploy-api.yml · deploy-web.yml (push to main)          │
+│                                                                             │
+│   Vertex AI         Gemini 2.5 Flash (via google-genai SDK)                 │
+│   Cloud Run         Future API service deployment                           │
+│   Secret Manager    Service account keys                                    │
+│   Cloud Logging     Agent execution logs                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,14 +36,14 @@
 
 ## Agent Pipeline
 
-| # | Agent | Responsibility | Key Tools |
-|---|-------|----------------|-----------|
-| — | **SentinelOrchestrator** | Sequence coordinator. Calls agents #1–5, propagates context, returns consolidated result. Does not score or act. | RunPatternAnalyzer, RunBehavioralRisk, RunEvidenceBuilder, RunAggregatedScorer, RunActionExecutor |
-| 1 | **TransactionPatternAnalyzer** | Detect global anomalies: unusual amounts, rare merchants, location shifts, transaction velocity | AmountSpike, GeoDistance, RareMcc, Velocity, TimeWindow, ScoreBlender |
-| 2 | **BehavioralRiskDetector** | Score deviation from the customer's own historical behaviour | AmountDeviation, TimeDeviation, GeoDeviation, NewDevice, NewIpRange, MerchantNovelty, BurstActivity |
-| 3 | **EvidenceBuilderAgent** | Produce a deterministic, audit-ready explanation bundle before any action is taken | FlagMerger, SummaryComposer, EvidenceBuilder |
-| 4 | **AggregatedRiskScorer** | Combine signals into a calibrated 0–100 risk score with severity and recommended action | RiskBooster, ScoreCalibrator, ScoreNormalizer, SeverityClassifier, WeightedScoreBlender |
-| 5 | **ActionExecutor** | Execute only explicitly registered, policy-approved tools — cannot improvise | FreezeTransaction, NotifySecurityTeam, RequestStepUpAuth, EscalateToHuman, CreateCaseReport |
+| # | Agent | Status | Responsibility | Tools Count |
+|---|-------|--------|----------------|-------------|
+| — | **SentinelOrchestrator** | ✅ Implemented | Coordinates the pipeline, invokes agents #1-5 in sequence | 5+ coordination tools |
+| 1 | **TransactionPatternAnalyzer** | ✅ Implemented | Detect global anomalies: unusual amounts, rare merchants, impossible travel, velocity bursts | 6 tools |
+| 2 | **BehavioralRiskDetector** | ✅ Implemented | Score deviation from customer's personal historical behavior | 8 tools |
+| 3 | **EvidenceBuilderAgent** | ✅ Implemented | Produce deterministic, audit-ready explanation bundle | Evidence building tools |
+| 4 | **AggregatedRiskScorer** | ✅ Implemented | Combine pattern + behavioral scores with policy weights into final 0–100 score | Scoring & calibration tools |
+| 5 | **ActionExecutor** | ✅ Implemented | Execute policy-approved actions via explicit tools | Action execution tools |
 
 ---
 
@@ -133,102 +52,11 @@
 | Layer | Technology |
 |-------|-----------|
 | AI / Agents | Google ADK 0.9.0, Gemini 2.5 Flash |
-| Backend | Java 17, Spring Boot 4.0.2, Maven 3.9 |
-| Frontend | Next.js 16 (App Router), React 19, TypeScript 5 |
-| Styling | Tailwind CSS 4, shadcn/ui, Lucide icons |
-| Observability | OpenTelemetry SDK 1.43.0, Cloud Logging |
-| Containers | Docker multi-stage, node:20-alpine, eclipse-temurin:17-jre-alpine |
-| Cloud | Google Cloud Run, Artifact Registry, Secret Manager |
-| CI/CD | GitHub Actions |
-| Testing | Jest 30, React Testing Library |
-
----
-
-## Project Structure
-
-```
-sentinel-ai/
-├── api/                                  # Java Spring Boot backend
-│   ├── src/main/java/com/ing/sentinel/
-│   │   ├── SentinelApplication.java      # @SpringBootApplication entry point
-│   │   ├── agents/
-│   │   │   ├── SentinelOrchestrator.java # Pipeline coordinator (ROOT_AGENT)
-│   │   │   ├── TransactionPatternAnalyzer.java
-│   │   │   ├── BehavioralRiskDetector.java
-│   │   │   ├── EvidenceBuilderAgent.java
-│   │   │   ├── AggregatedRiskScorer.java
-│   │   │   └── ActionExecutor.java
-│   │   ├── api/
-│   │   │   ├── SentinelApiController.java  # REST endpoints
-│   │   │   └── HealthController.java
-│   │   ├── service/
-│   │   │   └── OrchestratorService.java    # ADK InMemoryRunner wrapper
-│   │   ├── store/
-│   │   │   └── CaseStoreService.java       # In-memory case/alert store
-│   │   ├── config/
-│   │   │   ├── CorsConfig.java
-│   │   │   └── TracingConfig.java
-│   │   └── tools/
-│   │       ├── pattern/                    # Agent #1 tools
-│   │       ├── behavioral/                 # Agent #2 tools
-│   │       ├── evidence/                   # Agent #3 tools
-│   │       ├── aggregator/                 # Agent #4 tools
-│   │       ├── action/                     # Agent #5 tools
-│   │       └── orchestrator/               # Pipeline coordination tools
-│   ├── src/main/resources/application.properties
-│   ├── Dockerfile
-│   └── pom.xml
-│
-├── web/                                  # Next.js frontend
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx                  # Dashboard (home)
-│   │   │   ├── cases/[id]/page.tsx       # Case detail
-│   │   │   ├── analytics/page.tsx        # Analytics dashboard
-│   │   │   ├── admin/page.tsx            # Policy / config viewer
-│   │   │   ├── layout.tsx
-│   │   │   └── api/                      # Next.js API proxy (BFF)
-│   │   │       ├── alerts/route.ts
-│   │   │       ├── cases/[id]/route.ts
-│   │   │       ├── cases/[id]/assign/route.ts
-│   │   │       ├── cases/[id]/note/route.ts
-│   │   │       ├── cases/[id]/escalate/route.ts
-│   │   │       ├── cases/[id]/close/route.ts
-│   │   │       ├── analytics/route.ts
-│   │   │       └── ingest/route.ts
-│   │   ├── components/
-│   │   │   ├── dashboard/
-│   │   │   │   ├── SummaryCards.tsx
-│   │   │   │   ├── CaseRiskScore.tsx
-│   │   │   │   ├── FraudTrends.tsx
-│   │   │   │   ├── ReasonChain.tsx       # Agent reason chain + approve/reject
-│   │   │   │   ├── RecentAlerts.tsx      # Live alert table with row navigation
-│   │   │   │   └── IngestTransactionModal.tsx
-│   │   │   ├── cases/
-│   │   │   │   ├── AgentTabs.tsx
-│   │   │   │   ├── AuditTimeline.tsx
-│   │   │   │   └── QuickActions.tsx
-│   │   │   └── layout/
-│   │   │       ├── DashboardLayout.tsx
-│   │   │       ├── Header.tsx
-│   │   │       └── Sidebar.tsx
-│   │   ├── lib/
-│   │   │   ├── apiProxy.ts               # proxyGet / proxyPost helpers
-│   │   │   └── mockDb.ts                 # Fallback in-memory data
-│   │   └── types/alert.ts                # Alert, CaseDetail, Analytics types
-│   ├── Dockerfile
-│   ├── next.config.ts                    # output: standalone (Cloud Run)
-│   └── package.json
-│
-├── .github/workflows/
-│   ├── deploy-api.yml                    # Java API → Cloud Run (on api/** changes)
-│   └── deploy-web.yml                    # Next.js → Cloud Run (on web/** changes)
-│
-└── doc/
-    ├── orchestrator.md
-    ├── dashboard.md
-    └── agents/                           # Per-agent documentation
-```
+| Agent Runtime | Java 17, Maven 3.8+, ADK InMemoryRunner |
+| Agent Tools | FunctionTool, deterministic calculations (z-score, Haversine, etc.) |
+| Frontend | Next.js 16, React 19, TypeScript 5 |
+| Cloud | Google Cloud Platform, Vertex AI API |
+| Containers | Docker, eclipse-temurin:17-jre-alpine |
 
 ---
 
@@ -236,62 +64,55 @@ sentinel-ai/
 
 ### Prerequisites
 
-- Java 17+, Maven 3.9+
-- Node.js 20+
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com)
+- **Java 17+**, Maven 3.8+
+- **Google Cloud Project** with Vertex AI API enabled
+- **Service Account JSON** with Vertex AI permissions
 
-### Run the API
+### Run the Full Pipeline
+
+```bash
+cd api
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
+
+mvn compile exec:java@orchestrator
+```
+
+**Example interaction:**
+```
+You > Analyze transaction: customer=CUST-123, amount=1500 EUR, 
+      merchant=electronics, country=NG, time=2026-03-17T03:00:00Z
+
+Agent > 🚀 Running 5-agent pipeline...
+        ✅ Pattern Analyzer: risk_score=86, flags=[AMOUNT_SPIKE, GEO_MISMATCH]
+        ✅ Behavioral Risk: behavioral_score=77, flags=[NEW_DEVICE, UNUSUAL_TIME]
+        ✅ Evidence Builder: evidence compiled
+        ✅ Aggregated Scorer: final_score=92, severity=CRITICAL
+        ✅ Action Executor: BLOCK_AND_NOTIFY executed
+        
+        📊 Final Decision: BLOCK transaction, notify security team
+```
+
+### Run Individual Agents
 
 ```bash
 cd api
 
-export GEMINI_API_KEY=your_key_here
+# Pattern Analyzer (Agent #1)
+mvn compile exec:java@pattern-analyzer
 
-mvn spring-boot:run
-# Starts on http://localhost:8080
+# Behavioral Risk Detector (Agent #2)
+mvn compile exec:java@behavioral-risk
+
+# Evidence Builder (Agent #3)
+mvn compile exec:java@evidence-builder
+
+# Action Executor (Agent #5)
+mvn compile exec:java@action-executor
+
+# ADK Dev UI (browser-based testing)
+mvn compile exec:java@dev-ui
 ```
-
-Verify:
-
-```bash
-curl http://localhost:8080/health
-# {"status":"UP"}
-
-curl http://localhost:8080/api/alerts
-# {"data":[...],"meta":{...}}
-```
-
-### Run the Frontend
-
-```bash
-cd web
-
-echo "SENTINEL_API_URL=http://localhost:8080" > .env.local
-
-npm install
-npm run dev
-# Opens at http://localhost:3000
-```
-
-The frontend falls back to in-memory mock data when `SENTINEL_API_URL` is not set — useful for UI-only development.
-
-### Run the full pipeline
-
-```bash
-curl -X POST http://localhost:8080/api/ingest \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transaction_id": "TX-1234",
-    "customer_id": "CUST-001",
-    "customer_name": "Jane Doe",
-    "amount": 4950.00,
-    "merchant": "Unknown Electronics",
-    "country": "NG",
-    "timestamp": "2026-03-17T12:00:00Z"
-  }'
-```
-
-Returns the full `CaseDetail` after the 5-agent pipeline completes (~30–90 s).
 
 ---
 
@@ -425,12 +246,18 @@ Both services deploy automatically to Cloud Run via GitHub Actions on push to `m
 
 ## Design Principles
 
-**Policy-governed actions** — Agent #5 can only call explicitly registered tools. It cannot escalate, freeze, or notify outside its toolset, regardless of what earlier agents suggest.
+✅ **Tool-based agents** — All fraud detection logic implemented as explicit FunctionTools, not in prompts
 
-**Explainability first** — Agent #3 builds a deterministic audit bundle before any action is taken. Every case includes a full reason chain traceable to raw signal values.
+✅ **Deterministic signals** — Pattern and behavioral tools use deterministic calculations (z-score, Haversine distance, CIDR matching)
 
-**Strict role separation** — Each agent has a single job. The orchestrator coordinates but never scores or acts. Tools within each agent are independently testable.
+✅ **Explainability first** — Every agent provides reasoning with feature contributions and version info for audit trail
 
-**Graceful degradation** — The frontend falls back to seeded mock data when the Java API is unreachable. All pages render correctly without a running backend.
+✅ **Strict role separation** — Each agent has a single responsibility. Pattern analyzes global signals, Behavioral analyzes customer-specific signals.
 
-**Immutable audit trail** — Every case mutation appends an audit entry with correlation ID, actor, timestamp, and policy version. Entries are append-only.
+✅ **Version tracking** — All agent outputs include version numbers (agent version + config version) for compliance
+
+✅ **Stateless & testable** — Agents have no session state, can be tested independently via interactive CLI
+
+✅ **Policy-governed actions** — Future Action Executor will only call explicitly registered tools, cannot improvise
+
+✅ **Observable** — Structured logging with agent versions, tool execution details, and timing information
