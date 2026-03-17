@@ -1,10 +1,17 @@
 import { Analytics } from '@/types/alert'
+import { isApiConnected, proxyGet } from '@/lib/apiProxy'
+import { db } from '@/lib/mockDb'
 
 async function getAnalytics(): Promise<Analytics> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/api/analytics`, {
-    cache: 'no-store',
-  })
-  return res.json()
+  if (isApiConnected()) {
+    try {
+      const res = await proxyGet('/api/analytics')
+      if (res.ok) return res.json()
+    } catch {
+      // fall through to mock
+    }
+  }
+  return db.analytics
 }
 
 export default async function AnalyticsPage() {

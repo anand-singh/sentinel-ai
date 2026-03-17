@@ -16,6 +16,9 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>17</release>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <!-- ADK CLI  -->
@@ -24,7 +27,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.2.0</version>
                 <configuration>
-                    <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                    <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                     <classpathScope>compile</classpathScope>
                 </configuration>
               <executions>
@@ -55,23 +58,23 @@
                 <execution>
                   <id>orchestrator</id>
                   <configuration>
-                    <mainClass>com.ing.sentinel.orchestrator.SentinelOrchestrator</mainClass>
+                    <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                   </configuration>
                 </execution>
               </executions>
             </plugin>
-            <!-- Spring Boot plugin to build a runnable fat jar containing all ADK dependencies -->
+            <!-- Spring Boot plugin to build a runnable fat jar — must match runtime (ADK ships 4.0.2) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.3</version> <!-- Common stable version, doesn't need to strictly match the internal framework via ADK -->
+                <version>4.0.2</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
                         <configuration>
-                            <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                            <mainClass>com.ing.sentinel.SentinelApplication</mainClass>
                         </configuration>
                     </execution>
                 </executions>

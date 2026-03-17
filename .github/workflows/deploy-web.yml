@@ -41,4 +41,5 @@ jobs:
             --source . \
             --region ${{ env.REGION }} \
             --platform managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars "SENTINEL_API_URL=${{ secrets.SENTINEL_API_URL }}"
