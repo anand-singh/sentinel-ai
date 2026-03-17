@@ -2,6 +2,21 @@
 
 **Sentinel AI** is a production-grade, multi-agent fraud detection and case management platform for banking. It ingests financial transactions in real time, runs them through a 5-agent AI pipeline powered by Google ADK and Gemini, assigns risk scores, executes policy-governed actions, and surfaces everything in a live Fraud Case Management Dashboard.
 
+## 🚀 Live Deployment
+
+| Service | URL | Region |
+|---------|-----|--------|
+| **Frontend (Web Dashboard)** | [sentinel-web-113270635078.europe-west4.run.app](https://sentinel-web-113270635078.europe-west4.run.app/) | `europe-west4` |
+| **Backend (API)** | [sentinel-api-113270635078.us-central1.run.app](https://sentinel-api-113270635078.us-central1.run.app/) | `us-central1` |
+
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/anand-singh/sentinel-ai/actions)
+[![Cloud Run - API](https://img.shields.io/badge/Cloud%20Run-API%20Deployed-4285F4?logo=google-cloud)](https://sentinel-api-113270635078.us-central1.run.app/health)
+[![Cloud Run - Web](https://img.shields.io/badge/Cloud%20Run-Web%20Deployed-4285F4?logo=google-cloud)](https://sentinel-web-113270635078.europe-west4.run.app/)
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![Google ADK](https://img.shields.io/badge/Google%20ADK-0.9.0-blue)](https://github.com/google/genai-adk)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5%20Flash-8E75B2?logo=google)](https://ai.google.dev/)
+
 ---
 
 ## System Architecture
