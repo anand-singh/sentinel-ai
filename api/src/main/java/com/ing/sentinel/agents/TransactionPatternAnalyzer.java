@@ -84,10 +84,12 @@ public class TransactionPatternAnalyzer {
                     RareMccTool.class, "analyzeRareMcc");
             FunctionTool timeTool = FunctionTool.create(
                     TimeWindowTool.class, "analyzeTimeWindow");
+            FunctionTool moneyMuleTool = FunctionTool.create(
+                    MoneyMulePatternTool.class, "analyzeMoneyMulePattern");
             FunctionTool blenderTool = FunctionTool.create(
                     ScoreBlenderTool.class, "blendRiskScores");
 
-            logger.info("🛠️ Loaded 6 pattern analysis tools");
+            logger.info("🛠️ Loaded 7 pattern analysis tools");
 
             return LlmAgent.builder()
                     .model(MODEL_NAME)
@@ -102,6 +104,8 @@ public class TransactionPatternAnalyzer {
                         ## Your Process:
                         
                         1. **Parse the transaction** - Extract transaction details: amount, merchant, location, time, etc.
+                           Pay special attention to customer_profile fields like account_age_days, large_inbound_transfer_today,
+                           outbound_today, prior_transaction_count, and destination_country.
                         
                         2. **Run signal analysis tools** - For each transaction, run ALL relevant tools:
                            - `analyze_amount_spike` - Detect unusual transaction amounts (z-score based)
@@ -109,15 +113,30 @@ public class TransactionPatternAnalyzer {
                            - `analyze_velocity` - Check transaction frequency patterns
                            - `analyze_rare_mcc` - Detect unusual merchant categories
                            - `analyze_time_window` - Check for unusual transaction times
+                           - `analyze_money_mule_pattern` - CRITICAL: Detect money mule patterns (round-trip transfers,
+                             new account + large transfers, high-risk destinations). Use customer_profile fields:
+                             large_inbound_transfer_today, outbound_today, account_age_days, and destination_country.
                         
-                        3. **Blend scores** - Use `blend_risk_scores` to combine all signals into a final risk score
+                        3. **Blend scores** - Use `blend_risk_scores` to combine all signals into a final risk score.
+                           IMPORTANT: If money mule pattern is detected, use the highest normalized_signal from money mule
+                           analysis as both the amount_signal and velocity_signal to ensure proper risk escalation.
                         
                         4. **Generate response** - Return a structured analysis with:
                            - `risk_score` (0-100): Overall risk level
-                           - `flags`: List of triggered flags (AMOUNT_SPIKE, GEO_MISMATCH, etc.)
+                           - `flags`: List of triggered flags (AMOUNT_SPIKE, GEO_MISMATCH, VELOCITY_CHECK_FAILED, etc.)
                            - `reasoning`: Human-readable explanation
                            - `feature_contributions`: Numeric details for each signal
                            - `version`: Agent version for audit trail
+                        
+                        ## CRITICAL: Money Mule Detection
+                        When you see these patterns, the transaction is HIGH RISK:
+                        - New account (account_age_days < 30) with wire transfer
+                        - Large inbound transfer followed by rapid outbound transfers (round-trip)
+                        - Transfers to high-risk countries (UA, NG, RU, etc.)
+                        - outbound_today approaching large_inbound_transfer_today
+                        
+                        For wire transfers with customer_profile containing large_inbound_transfer_today and outbound_today,
+                        ALWAYS call analyze_money_mule_pattern to detect these patterns.
                         
                         ## Output Format:
                         Always respond with a JSON object containing:
@@ -145,7 +164,7 @@ public class TransactionPatternAnalyzer {
                         - Keep reasoning factual and concise
                         - Flag anything suspicious, let downstream agents decide actions
                         """)
-                    .tools(amountTool, geoTool, velocityTool, mccTool, timeTool, blenderTool)
+                    .tools(amountTool, geoTool, velocityTool, mccTool, timeTool, moneyMuleTool, blenderTool)
                     .outputKey("pattern_analysis_result")
                     .build();
 

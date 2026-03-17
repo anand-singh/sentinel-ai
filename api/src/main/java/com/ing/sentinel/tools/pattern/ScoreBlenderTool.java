@@ -140,7 +140,11 @@ public class ScoreBlenderTool {
      * Determine recommended action based on risk score and flags
      */
     private static String determineRecommendation(int riskScore, List<String> flags) {
-        if (riskScore >= 80 || flags.contains("GEO_MISMATCH")) {
+        // Money mule patterns are always critical
+        if (flags.contains("VELOCITY_CHECK_FAILED") || flags.contains("ROUND_TRIP_TRANSFER")) {
+            return "BLOCK_AND_NOTIFY";
+        }
+        if (riskScore >= 80 || flags.contains("GEO_MISMATCH") || flags.contains("HIGH_RISK_DESTINATION")) {
             return "BLOCK_AND_NOTIFY";
         } else if (riskScore >= 60) {
             return "STEP_UP_AUTH";
@@ -171,7 +175,7 @@ public class ScoreBlenderTool {
         if (flags.contains("GEO_MISMATCH")) {
             reasons.add(String.format("impossible travel (+%.1f pts)", (Double) contributions.get("geo_contribution")));
         }
-        if (flags.contains("UNUSUAL_VELOCITY")) {
+        if (flags.contains("UNUSUAL_VELOCITY") || flags.contains("VELOCITY_CHECK_FAILED")) {
             reasons.add(String.format("high velocity (+%.1f pts)", (Double) contributions.get("velocity_contribution")));
         }
         if (flags.contains("RARE_MCC")) {
@@ -179,6 +183,12 @@ public class ScoreBlenderTool {
         }
         if (flags.contains("UNUSUAL_TIME")) {
             reasons.add(String.format("unusual time (+%.1f pts)", (Double) contributions.get("time_contribution")));
+        }
+        if (flags.contains("ROUND_TRIP_TRANSFER")) {
+            reasons.add("money mule pattern (round-trip transfer)");
+        }
+        if (flags.contains("HIGH_RISK_DESTINATION")) {
+            reasons.add("high-risk destination country");
         }
         
         sb.append(String.join(", ", reasons));

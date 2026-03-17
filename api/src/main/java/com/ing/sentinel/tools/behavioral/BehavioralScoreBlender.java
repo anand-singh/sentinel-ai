@@ -23,12 +23,13 @@ public class BehavioralScoreBlender {
     private static final Logger logger = Logger.getLogger(BehavioralScoreBlender.class.getName());
     
     // Default signal weights (must sum to 1.0)
-    private static final double WEIGHT_AMOUNT = 0.25;
-    private static final double WEIGHT_GEO = 0.25;
-    private static final double WEIGHT_DEVICE = 0.20;
-    private static final double WEIGHT_TIME = 0.10;
-    private static final double WEIGHT_MERCHANT = 0.10;
-    private static final double WEIGHT_VELOCITY = 0.10;
+    private static final double WEIGHT_AMOUNT = 0.20;
+    private static final double WEIGHT_GEO = 0.15;
+    private static final double WEIGHT_DEVICE = 0.15;
+    private static final double WEIGHT_TIME = 0.05;
+    private static final double WEIGHT_MERCHANT = 0.05;
+    private static final double WEIGHT_VELOCITY = 0.15;
+    private static final double WEIGHT_NEW_ACCOUNT = 0.25;  // High weight for new accounts (money mule risk)
     
     // Version info
     private static final String AGENT_VERSION = "behavior-v1.0.0";
@@ -46,6 +47,7 @@ public class BehavioralScoreBlender {
             @Schema(name = "ip_signal", description = "Normalized new IP range signal (0-1)") double ipSignal,
             @Schema(name = "merchant_signal", description = "Normalized merchant novelty signal (0-1)") double merchantSignal,
             @Schema(name = "velocity_signal", description = "Normalized burst activity signal (0-1)") double velocitySignal,
+            @Schema(name = "new_account_signal", description = "Normalized new account signal (0-1), high for accounts < 30 days old") double newAccountSignal,
             @Schema(name = "amount_flag", description = "Flag from amount analysis (AMOUNT_DEVIATION or null)") String amountFlag,
             @Schema(name = "time_flag", description = "Flag from time analysis (UNUSUAL_TIME or null)") String timeFlag,
             @Schema(name = "geo_flag", description = "Flag from geo analysis (GEO_DEVIATION or null)") String geoFlag,
@@ -53,6 +55,7 @@ public class BehavioralScoreBlender {
             @Schema(name = "ip_flag", description = "Flag from IP analysis (NEW_IP_RANGE or null)") String ipFlag,
             @Schema(name = "merchant_flag", description = "Flag from merchant analysis (RARE_MERCHANT/RARE_MCC or null)") String merchantFlag,
             @Schema(name = "velocity_flag", description = "Flag from velocity analysis (BURST_ACTIVITY or null)") String velocityFlag,
+            @Schema(name = "new_account_flag", description = "Flag from new account analysis (NEW_ACCOUNT or null)") String newAccountFlag,
             @Schema(name = "amount_zscore_customer", description = "Customer-specific amount z-score for feature contributions") double amountZscoreCustomer,
             @Schema(name = "geo_distance_km", description = "Geographic distance in km for feature contributions") double geoDistanceKm) {
         
@@ -70,7 +73,14 @@ public class BehavioralScoreBlender {
                 (combinedDeviceIpSignal * WEIGHT_DEVICE) +
                 (timeSignal * WEIGHT_TIME) +
                 (merchantSignal * WEIGHT_MERCHANT) +
-                (velocitySignal * WEIGHT_VELOCITY);
+                (velocitySignal * WEIGHT_VELOCITY) +
+                (newAccountSignal * WEIGHT_NEW_ACCOUNT);
+        
+        // Apply boost for high-risk combinations (new account + new device + high velocity)
+        if (newAccountSignal > 0.7 && combinedDeviceIpSignal > 0.5 && velocitySignal > 0.5) {
+            weightedSum = Math.min(1.0, weightedSum + 0.15);
+            logger.info("⚠️ Applying high-risk combination boost");
+        }
         
         // Convert to 0-100 scale
         int behavioralRiskScore = (int) Math.round(Math.min(100, Math.max(0, weightedSum * 100)));
@@ -84,6 +94,7 @@ public class BehavioralScoreBlender {
         addFlagIfPresent(flags, ipFlag);
         addFlagIfPresent(flags, merchantFlag);
         addFlagIfPresent(flags, velocityFlag);
+        addFlagIfPresent(flags, newAccountFlag);
         
         // Build feature contributions
         Map<String, Object> contributions = new HashMap<>();
@@ -94,6 +105,7 @@ public class BehavioralScoreBlender {
         contributions.put("new_ip_range", ipSignal > 0.5 ? 1 : 0);
         contributions.put("merchant_novelty", Math.round(merchantSignal * 1000.0) / 1000.0);
         contributions.put("burst_in_window", velocitySignal > 0.5 ? 1 : 0);
+        contributions.put("new_account", newAccountSignal > 0.5 ? 1 : 0);
         
         // Generate reasoning
         String reasoning = generateReasoning(flags, amountZscoreCustomer, geoDistanceKm, behavioralRiskScore);
@@ -109,7 +121,8 @@ public class BehavioralScoreBlender {
                 "device", WEIGHT_DEVICE,
                 "time", WEIGHT_TIME,
                 "merchant", WEIGHT_MERCHANT,
-                "velocity", WEIGHT_VELOCITY
+                "velocity", WEIGHT_VELOCITY,
+                "new_account", WEIGHT_NEW_ACCOUNT
         ));
         result.put("version", AGENT_VERSION);
         result.put("config_version", CONFIG_VERSION);
@@ -156,6 +169,9 @@ public class BehavioralScoreBlender {
                     break;
                 case "BURST_ACTIVITY":
                     reasons.add("high velocity");
+                    break;
+                case "NEW_ACCOUNT":
+                    reasons.add("newly opened account (high money mule risk)");
                     break;
                 default:
                     reasons.add(flag.toLowerCase().replace("_", " "));

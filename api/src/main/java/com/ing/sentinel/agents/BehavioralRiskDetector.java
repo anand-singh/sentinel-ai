@@ -87,10 +87,12 @@ public class BehavioralRiskDetector {
                     com.ing.sentinel.tools.behavioral.MerchantNoveltySignal.class, "analyzeMerchantNovelty");
             FunctionTool burstActivityTool = FunctionTool.create(
                     com.ing.sentinel.tools.behavioral.BurstActivitySignal.class, "analyzeBurstActivity");
+            FunctionTool newAccountTool = FunctionTool.create(
+                    com.ing.sentinel.tools.behavioral.NewAccountSignal.class, "analyzeNewAccount");
             FunctionTool behavioralBlenderTool = FunctionTool.create(
                     com.ing.sentinel.tools.behavioral.BehavioralScoreBlender.class, "blendBehavioralScores");
 
-            logger.info("🛠️ Loaded 8 behavioral analysis tools");
+            logger.info("🛠️ Loaded 9 behavioral analysis tools");
 
             return LlmAgent.builder()
                     .model(MODEL_NAME)
@@ -106,6 +108,8 @@ public class BehavioralRiskDetector {
                         
                         1. **Parse the transaction and customer profile** - Extract transaction details and the customer's
                            behavioral profile (avg amounts, usual hours, devices, IPs, merchants, locations, etc.)
+                           CRITICAL: Look for account_age_days, prior_transaction_count, known_devices (empty = NEW_DEVICE),
+                           large_inbound_transfer_today, outbound_today.
                         
                         2. **Run behavioral signal analysis tools** - For each transaction, run ALL relevant tools:
                            - `analyze_amount_deviation` - Compare amount to customer's personal baseline (z-score)
@@ -115,15 +119,27 @@ public class BehavioralRiskDetector {
                            - `analyze_new_ip_range` - Detect if IP is from an unusual range for this customer
                            - `analyze_merchant_novelty` - Check if merchant/MCC is unusual for this customer
                            - `analyze_burst_activity` - Check if transaction velocity exceeds customer's baseline
+                           - `analyze_new_account` - CRITICAL: Check if account_age_days < 30 (high risk for money mule)
                         
-                        3. **Blend scores** - Use `blend_behavioral_scores` to combine all signals into a final behavioral risk score
+                        3. **Blend scores** - Use `blend_behavioral_scores` to combine all signals into a final behavioral risk score.
+                           IMPORTANT: For new accounts with large transfers, use high signals (0.9+) for amount and velocity.
                         
                         4. **Generate response** - Return a structured analysis with:
                            - `behavioral_risk_score` (0-100): How unusual this is for THIS customer
-                           - `flags`: List of triggered flags (NEW_DEVICE, UNUSUAL_TIME, GEO_DEVIATION, etc.)
+                           - `flags`: List of triggered flags (NEW_DEVICE, NEW_ACCOUNT, BURST_ACTIVITY, GEO_DEVIATION, etc.)
                            - `reasoning`: Human-readable explanation specific to customer behavior
                            - `feature_contributions`: Numeric details for each signal
                            - `version`: Agent version for audit trail
+                        
+                        ## CRITICAL: New Account + Large Transfer Detection
+                        When you see these patterns, the behavioral risk is HIGH:
+                        - account_age_days < 30 = NEW_ACCOUNT flag (very new = very high risk)
+                        - known_devices is empty [] = NEW_DEVICE flag
+                        - Large transfers (>$1000) from new account = BURST_ACTIVITY
+                        - outbound_today approaching large_inbound_transfer_today = money mule pattern
+                        
+                        For new accounts with large inbound/outbound transfers, ALWAYS call analyze_new_account
+                        and analyze_burst_activity with high velocity values.
                         
                         ## Output Format:
                         Always respond with a JSON object containing:
@@ -155,7 +171,7 @@ public class BehavioralRiskDetector {
                         """)
                     .tools(amountDeviationTool, timeDeviationTool, geoDeviationTool, 
                            newDeviceTool, newIpRangeTool, merchantNoveltyTool, 
-                           burstActivityTool, behavioralBlenderTool)
+                           burstActivityTool, newAccountTool, behavioralBlenderTool)
                     .outputKey("behavioral_risk_result")
                     .build();
 

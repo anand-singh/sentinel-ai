@@ -84,7 +84,7 @@ class BehavioralRiskDetectorTest {
         // Get the list of tools synchronously
         var toolsList = llmAgent.tools().blockingGet();
         assertNotNull(toolsList, "Tools list should not be null");
-        assertThat(toolsList).hasSize(8);
+        assertThat(toolsList).hasSize(9);
     }
 
     @Test
@@ -251,11 +251,11 @@ class BehavioralRiskDetectorTest {
         LlmAgent llmAgent = (LlmAgent) agent;
         var tools = llmAgent.tools().blockingGet();
         
-        // BehavioralRiskDetector should have 8 tools:
+        // BehavioralRiskDetector should have 9 tools:
         // analyzeAmountDeviation, analyzeTimeDeviation, analyzeGeoDeviation,
         // analyzeNewDevice, analyzeNewIpRange, analyzeMerchantNovelty,
-        // analyzeBurstActivity, blendBehavioralScores
-        assertEquals(8, tools.size(), "Should have exactly 8 tools configured");
+        // analyzeBurstActivity, analyzeNewAccount, blendBehavioralScores
+        assertEquals(9, tools.size(), "Should have exactly 9 tools configured");
     }
 
     @Test

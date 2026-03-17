@@ -84,7 +84,7 @@ class TransactionPatternAnalyzerTest {
         // Get the list of tools synchronously
         var toolsList = llmAgent.tools().blockingGet();
         assertNotNull(toolsList, "Tools list should not be null");
-        assertThat(toolsList).hasSize(6);
+        assertThat(toolsList).hasSize(7);
     }
 
     @Test
@@ -254,7 +254,7 @@ class TransactionPatternAnalyzerTest {
         // TransactionPatternAnalyzer should have 6 tools:
         // analyzeAmountSpike, analyzeGeoDistance, analyzeVelocity, 
         // analyzeRareMcc, analyzeTimeWindow, blendRiskScores
-        assertEquals(6, tools.size(), "Should have exactly 6 tools configured");
+        assertEquals(7, tools.size(), "Should have exactly 7 tools configured (6 signal analyzers + 1 score blender)");
     }
 
     @Test
@@ -654,9 +654,9 @@ class TransactionPatternAnalyzerTest {
         LlmAgent llmAgent = (LlmAgent) agent;
         var tools = llmAgent.tools().blockingGet();
         
-        // Verify we have exactly 6 pattern analysis tools
-        assertEquals(6, tools.size(), 
-                "Should have 6 tools: analyzeAmountSpike, analyzeGeoDistance, analyzeVelocity, analyzeRareMcc, analyzeTimeWindow, blendRiskScores");
+        // Verify we have exactly 7 pattern analysis tools
+        assertEquals(7, tools.size(), 
+                "Should have 7 tools: analyzeAmountSpike, analyzeGeoDistance, analyzeVelocity, analyzeRareMcc, analyzeTimeWindow, analyzeMoneyMulePattern, blendRiskScores");
     }
 
     @Test
@@ -907,10 +907,10 @@ class TransactionPatternAnalyzerTest {
         LlmAgent llmAgent = (LlmAgent) agent;
         var tools = llmAgent.tools().blockingGet();
         
-        // TransactionPatternAnalyzer needs all 6 tools for complete analysis:
-        // 5 signal tools + 1 blending tool
-        assertEquals(6, tools.size(), 
-                "Should have 6 tools: 5 signal analyzers + 1 score blender");
+        // TransactionPatternAnalyzer needs all 7 tools for complete analysis:
+        // 6 signal tools + 1 blending tool
+        assertEquals(7, tools.size(), 
+                "Should have 7 tools: 6 signal analyzers + 1 score blender");
     }
 
     @Test
