@@ -69,7 +69,7 @@ jobs:
             --cpu 2 \
             --memory 2Gi \
             --min-instances 0 \
-            --max-instances 10 \
+            --max-instances 8 \
             --timeout 300
 
       - name: Get Service URL
