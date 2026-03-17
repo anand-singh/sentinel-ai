@@ -77,6 +77,15 @@ resource "google_project_iam_member" "github_actions_run_admin" {
   depends_on = [google_project_service.required_apis]
 }
 
+# Grant GitHub Actions service account access to act as the Cloud Run service account
+resource "google_project_iam_member" "github_actions_sa_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:github-actions@${var.project_id}.iam.gserviceaccount.com"
+  
+  depends_on = [google_project_service.required_apis]
+}
+
 
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "sentinel_api" {
