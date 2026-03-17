@@ -36,7 +36,7 @@ jobs:
       - name: Build with Maven
         run: |
           cd api
-          mvn clean package -DskipTests
+          mvn clean package
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2

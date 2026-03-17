@@ -7,10 +7,10 @@
 | Service | URL | Region |
 |---------|-----|--------|
 | **Frontend (Web Dashboard)** | [sentinel-web-113270635078.europe-west4.run.app](https://sentinel-web-113270635078.europe-west4.run.app/) | `europe-west4` |
-| **Backend (API)** | [sentinel-api-113270635078.us-central1.run.app](https://sentinel-api-113270635078.us-central1.run.app/) | `us-central1` |
+| **Backend (API)** | [sentinel-api-113270635078.europe-west4.run.app](https://sentinel-api-113270635078.europe-west4.run.app/) | `europe-west4` |
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/anand-singh/sentinel-ai/actions)
-[![Cloud Run - API](https://img.shields.io/badge/Cloud%20Run-API%20Deployed-4285F4?logo=google-cloud)](https://sentinel-api-113270635078.us-central1.run.app/health)
+[![Cloud Run - API](https://img.shields.io/badge/Cloud%20Run-API%20Deployed-4285F4?logo=google-cloud)](https://sentinel-api-113270635078.europe-west4.run.app/health)
 [![Cloud Run - Web](https://img.shields.io/badge/Cloud%20Run-Web%20Deployed-4285F4?logo=google-cloud)](https://sentinel-web-113270635078.europe-west4.run.app/)
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
