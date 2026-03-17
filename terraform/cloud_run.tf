@@ -59,6 +59,16 @@ resource "google_project_iam_member" "cloudbuild_artifact_writer" {
   depends_on = [google_project_service.required_apis]
 }
 
+# Grant GitHub Actions service account access to push images to Artifact Registry
+resource "google_project_iam_member" "github_actions_artifact_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:github-actions@${var.project_id}.iam.gserviceaccount.com"
+  
+  depends_on = [google_project_service.required_apis]
+}
+
+
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "sentinel_api" {
   name     = var.service_name
