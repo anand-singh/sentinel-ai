@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ing.sentinel</groupId>
+        <artifactId>sentinel-ai-parent</artifactId>
+        <version>0.1.0</version>
+    </parent>
+
+    <artifactId>sentinel-ai-agent</artifactId>
+    <name>Sentinel AI Agent</name>
+    <description>Google ADK agents and tools for Sentinel AI fraud detection</description>
+
+    <dependencies>
+        <!-- Google ADK -->
+        <dependency>
+            <groupId>com.google.adk</groupId>
+            <artifactId>google-adk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.adk</groupId>
+            <artifactId>google-adk-dev</artifactId>
+        </dependency>
+
+        <!-- Jackson for JSON processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- OpenTelemetry for tracing -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-logging</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!-- ADK CLI  -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+                    <classpathScope>compile</classpathScope>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pattern-analyzer</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.TransactionPatternAnalyzer</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>behavioral-risk</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.BehavioralRiskDetector</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>action-executor</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.ActionExecutor</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>evidence-builder</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.EvidenceBuilderAgent</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>orchestrator</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.SentinelOrchestrator</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>aggregated-risk</id>
+                        <configuration>
+                            <mainClass>com.ing.sentinel.agent.agents.AggregatedRiskScorer</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
