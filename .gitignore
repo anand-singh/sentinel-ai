@@ -26,3 +26,26 @@ replay_pid*
 .idea
 .DS_Store
 /api/target/
+
+# GCP Service Account Keys
+*-key.json
+*.key.json
+service-account*.json
+credentials.json
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Temporary and Debug Scripts
+get_cr*
+get_token*
+testenv/
+venv/
+.venv/
+__pycache__/
+
+# Scratch files
+*.scratch.*
+/tmp/
