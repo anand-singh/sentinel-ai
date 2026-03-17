@@ -86,6 +86,24 @@ resource "google_project_iam_member" "github_actions_sa_user" {
   depends_on = [google_project_service.required_apis]
 }
 
+# Grant GitHub Actions service account access to trigger source builds
+resource "google_project_iam_member" "github_actions_build_builder" {
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:github-actions@${var.project_id}.iam.gserviceaccount.com"
+  
+  depends_on = [google_project_service.required_apis]
+}
+
+# Grant GitHub Actions service account access to manage source code storage
+resource "google_project_iam_member" "github_actions_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:github-actions@${var.project_id}.iam.gserviceaccount.com"
+  
+  depends_on = [google_project_service.required_apis]
+}
+
 
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "sentinel_api" {
