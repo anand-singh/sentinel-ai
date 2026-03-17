@@ -280,21 +280,34 @@ api/
 ├── pom.xml
 ├── Dockerfile
 └── src/main/java/com/ing/sentinel/
+    ├── SentinelApplication.java          # Spring Boot main class
+    ├── SentinelDevServer.java            # ADK Dev UI server
     ├── agents/
-    │   ├── SentinelOrchestrator.java
+    │   ├── SentinelOrchestrator.java     # Pipeline coordinator
     │   ├── TransactionPatternAnalyzer.java
     │   ├── BehavioralRiskDetector.java
     │   ├── EvidenceBuilderAgent.java
     │   ├── AggregatedRiskScorer.java
     │   └── ActionExecutor.java
+    ├── api/
+    │   ├── SentinelApiController.java    # REST endpoints
+    │   └── HealthController.java
+    ├── service/
+    │   └── OrchestratorService.java      # Service layer
+    ├── store/
+    │   └── CaseStoreService.java         # Case/alert storage
+    ├── config/
+    │   ├── CorsConfig.java
+    │   └── TracingConfig.java            # OpenTelemetry config
     └── tools/
-        ├── AmountSpikeTool.java
-        ├── GeoDistanceTool.java
-        ├── VelocityTool.java
-        ├── RareMccTool.java
-        ├── TimeWindowTool.java
-        ├── ScoreBlenderTool.java
-        ├── behavioral/
+        ├── pattern/                      # Agent #1 tools
+        │   ├── AmountSpikeTool.java
+        │   ├── GeoDistanceTool.java
+        │   ├── VelocityTool.java
+        │   ├── RareMccTool.java
+        │   ├── TimeWindowTool.java
+        │   └── ScoreBlenderTool.java
+        ├── behavioral/                   # Agent #2 tools
         │   ├── AmountDeviationSignal.java
         │   ├── TimeDeviationSignal.java
         │   ├── GeoDeviationSignal.java
@@ -303,10 +316,29 @@ api/
         │   ├── MerchantNoveltySignal.java
         │   ├── BurstActivitySignal.java
         │   └── BehavioralScoreBlender.java
-        ├── evidence/
-        ├── aggregator/
-        ├── action/
-        └── orchestrator/
+        ├── evidence/                     # Agent #3 tools
+        │   ├── FlagMergerTool.java
+        │   ├── SummaryComposerTool.java
+        │   ├── EvidenceBuilderTool.java
+        │   └── ManualToolVerification.java
+        ├── aggregator/                   # Agent #4 tools
+        │   ├── ScoreNormalizer.java
+        │   ├── WeightedScoreBlender.java
+        │   ├── RiskBooster.java
+        │   ├── ScoreCalibrator.java
+        │   └── SeverityClassifier.java
+        ├── action/                       # Agent #5 tools
+        │   ├── FreezeTransactionTool.java
+        │   ├── NotifySecurityTeamTool.java
+        │   ├── CreateCaseReportTool.java
+        │   ├── RequestStepUpAuthTool.java
+        │   └── EscalateToHumanTool.java
+        └── orchestrator/                 # Orchestrator tools
+            ├── RunPatternAnalyzerTool.java
+            ├── RunBehavioralRiskTool.java
+            ├── RunEvidenceBuilderTool.java
+            ├── RunAggregatedScorerTool.java
+            └── RunActionExecutorTool.java
 ```
 
 ---
