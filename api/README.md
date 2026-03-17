@@ -363,6 +363,8 @@ mvn test
 mvn test jacoco:report
 ```
 
+**Test Coverage:** 70%
+
 ---
 
 ## 🐛 Troubleshooting

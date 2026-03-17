@@ -64,7 +64,7 @@ public class ScoreCalibrator {
         // Round and bound to [0-100]
         int finalScore = (int) Math.round(Math.max(0, Math.min(100, calibratedScore)));
         
-        result.put("final_risk_score", finalScore);
+        result.put("calibrated_score", finalScore);
         result.put("normalized_score", Math.round(normalizedScore * 10000.0) / 10000.0);
         result.put("calibration_mode", calibrationMode != null && !calibrationMode.isEmpty() ? calibrationMode : "piecewise");
         

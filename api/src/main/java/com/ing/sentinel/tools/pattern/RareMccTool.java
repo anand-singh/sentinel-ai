@@ -75,6 +75,9 @@ public class RareMccTool {
         // Calculate normalized signal [0,1]
         double normalizedSignal = calculateNormalizedSignal(isHighRiskMcc, customerMccRatio, globalMccFrequency, isRareForCustomer);
         
+        // Calculate rarity score (inverse of frequency)
+        double rarityScore = 1.0 - Math.min(1.0, customerMccRatio * 10.0);
+        
         result.put("merchant_category", merchantCategory);
         result.put("is_high_risk_mcc", isHighRiskMcc);
         result.put("customer_mcc_history", customerMccHistory);
@@ -82,6 +85,7 @@ public class RareMccTool {
         result.put("global_mcc_frequency", globalMccFrequency);
         result.put("is_rare_for_customer", isRareForCustomer);
         result.put("is_globally_rare", isGloballyRare);
+        result.put("rarity_score", Math.round(rarityScore * 1000.0) / 1000.0);
         result.put("normalized_signal", Math.round(normalizedSignal * 1000.0) / 1000.0);
         result.put("flag", flagRaised ? "RARE_MCC" : null);
         result.put("flag_raised", flagRaised);

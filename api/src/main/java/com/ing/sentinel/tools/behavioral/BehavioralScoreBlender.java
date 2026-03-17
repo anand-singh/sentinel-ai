@@ -111,7 +111,7 @@ public class BehavioralScoreBlender {
                 "merchant", WEIGHT_MERCHANT,
                 "velocity", WEIGHT_VELOCITY
         ));
-        result.put("version", AGENT_VERSION);
+        result.put("agent_version", AGENT_VERSION);
         result.put("config_version", CONFIG_VERSION);
         result.put("analyzed_at", Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
         
