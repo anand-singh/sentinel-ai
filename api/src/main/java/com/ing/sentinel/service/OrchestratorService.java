@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -56,6 +57,7 @@ public class OrchestratorService {
 
         StringBuilder fullOutput = new StringBuilder();
         runner.runAsync(userId, session.id(), userMsg)
+            .timeout(90, TimeUnit.SECONDS)
             .blockingForEach(event -> fullOutput.append(event.stringifyContent()).append("\n"));
 
         String raw = fullOutput.toString();
