@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - 'api/**'
-      - '.github/workflows/deploy-api.yml'
+      - "api/**"
+      - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-central1
+  REGION: europe-west4
   SERVICE_NAME: sentinel-api
 
 jobs:
@@ -29,8 +29,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
           cache: maven
 
       - name: Build with Maven
@@ -41,7 +41,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
