@@ -26,7 +26,7 @@ This directory contains Terraform configuration for deploying Sentinel AI to Goo
 
 Edit `terraform.tfvars`:
 ```hcl
-project_id = "your-gcp-project-id"
+project_id = "qwiklabs-asl-03-085d8ab3ed6e"
 region     = "us-central1"
 ```
 
