@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ing.sentinel</groupId>
-    <artifactId>sentinel-ai-parent</artifactId>
+    <artifactId>sentinel-ai-platform</artifactId>
     <version>0.1.0</version>
     <packaging>pom</packaging>
-    <name>Sentinel AI Parent</name>
+    <name>Sentinel AI Platform</name>
 
     <modules>
         <module>sentinel-ai-agent</module>
