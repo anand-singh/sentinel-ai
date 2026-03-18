@@ -1,18 +1,70 @@
 # Quick reference commands for Sentinel AI deployment
 
+## Project Structure
+
+This is now a **multi-module Maven project**:
+- `sentinel-ai-agent/` - Google ADK agents and tools
+- `api/` - Spring Boot REST API
+
 ## Local Development
+
+### Build All Modules
 ```bash
-# Run orchestrator locally
+# From root directory
+mvn clean install
+
+# Skip tests
+mvn clean install -DskipTests
+
+# Build only agent module
+mvn clean install -pl sentinel-ai-agent
+
+# Build only API module
+mvn clean install -pl api
+```
+
+### Run ADK Development UI (port 8090)
+```bash
+cd sentinel-ai-agent
+GEMINI_API_KEY=your_key mvn exec:java@dev-ui
+# Open http://localhost:8090
+```
+
+### Run Individual Agents (CLI)
+```bash
+cd sentinel-ai-agent
+
+# Orchestrator (full pipeline)
+GEMINI_API_KEY=your_key mvn exec:java@orchestrator
+
+# Individual agents
+GEMINI_API_KEY=your_key mvn exec:java@pattern-analyzer
+GEMINI_API_KEY=your_key mvn exec:java@behavioral-risk
+GEMINI_API_KEY=your_key mvn exec:java@action-executor
+GEMINI_API_KEY=your_key mvn exec:java@evidence-builder
+```
+
+### Run Spring Boot REST API (port 8080)
+```bash
 cd api
-mvn exec:java@orchestrator
+GEMINI_API_KEY=your_key mvn spring-boot:run
 
-# Run individual agents
-mvn exec:java@pattern-analyzer
-mvn exec:java@behavioral-risk
-mvn exec:java@action-executor
+# Or using packaged jar
+GEMINI_API_KEY=your_key java -jar target/sentinel-ai-api-0.1.0.jar
+```
 
-# Build
-mvn clean package
+### Run Tests
+```bash
+# All modules
+mvn test
+
+# Specific module
+mvn test -pl sentinel-ai-agent
+mvn test -pl api
+
+# Specific test class
+cd api
+mvn test -Dtest=OrchestratorServiceTest
 ```
 
 ## Docker Local

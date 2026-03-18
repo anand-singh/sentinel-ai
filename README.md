@@ -107,22 +107,11 @@ Agent > 🚀 Running 5-agent pipeline...
 ### Run Individual Agents
 
 ```bash
-cd api
+cd sentinel-ai-platform/sentinel-ai-agent
 
-# Pattern Analyzer (Agent #1)
-mvn compile exec:java@pattern-analyzer
+mvn compile exec:java
 
-# Behavioral Risk Detector (Agent #2)
-mvn compile exec:java@behavioral-risk
-
-# Evidence Builder (Agent #3)
-mvn compile exec:java@evidence-builder
-
-# Action Executor (Agent #5)
-mvn compile exec:java@action-executor
-
-# ADK Dev UI (browser-based testing)
-mvn compile exec:java@dev-ui
+Go to http://localhost:8080/ to interact with individual agents via web.
 ```
 
 ---
