@@ -1,281 +1,5 @@
 # Sentinel AI — Demo Screenshot Guide
 
-> Step-by-step guide to capturing every screen for the demo.
-> All mock data is pre-seeded with a real pipeline result (TX-DEMO-001, score=95, CRITICAL, BLOCK).
-> The ingest modal is pre-loaded with the Sarah Jenkins scenario so screenshots are reproducible.
-
----
-
-## Prerequisites
-
-```bash
-# Terminal 1 — Java API
-cd sentinel-ai-platform/sentinel-ai-api
-export GEMINI_API_KEY=your_key
-mvn spring-boot:run
-# → http://localhost:8090
-
-# Terminal 2 — Next.js Dashboard  
-cd sentinel-ai-web
-npm run dev
-# → http://localhost:3001
-
-# Terminal 3 (optional) — ADK Dev UI (agents tab shown live)
-cd sentinel-ai-platform/sentinel-ai-agent
-GEMINI_API_KEY=your_key mvn exec:java@dev-ui
-# → http://localhost:8080
-```
-
----
-
-## Screenshot 1 — Main Dashboard
-
-**URL:** `http://localhost:3001`
-
-**What to show:**
-- Summary cards at the top (Total Alerts, Active Cases, Avg Risk Score, Escalations)
-- Case Risk Score gauge on the left
-- Reason Chain panel below the gauge
-- Fraud Trends chart (30-day sparkline)
-- Recent Alerts queue with CRITICAL / HIGH / MEDIUM / LOW severity badges
-
-**Steps:**
-1. Open `http://localhost:3001`
-2. Wait for the dashboard to load fully
-3. Screenshot the full page at 1440-wide viewport
-
----
-
-## Screenshot 2 — Ingest Transaction Modal (Pre-filled)
-
-**URL:** `http://localhost:3001` → click **"Ingest Transaction"** button (top-right)
-
-**What to show:**
-- The JSON editor pre-loaded with the Sarah Jenkins / TX-DEMO-001 transaction
-- The realistic fraud payload (Lagos, Nigeria • CARD_NOT_PRESENT • $4,950 • new device)
-
-**Steps:**
-1. Click the **Ingest Transaction** button at the top-right of the dashboard
-2. The modal opens with the sample transaction pre-populated
-3. Screenshot the modal — **do not click Submit** for this shot
-4. Key fields to highlight via annotation: `amount`, `city`, `device_id`, `known_devices`
-
----
-
-## Screenshot 3 — Live Pipeline Run (Submit + Loading State)
-
-**URL:** `http://localhost:3001` → modal → click **Submit**
-
-> Only do this if the Java API is running. Pipeline takes ~60–90s.
-
-**What to show:**
-- The loading spinner inside the modal while the 5-agent pipeline is executing
-- Shows "AI agents processing your transaction…" state
-
-**Steps:**
-1. Click **Submit** in the modal
-2. Immediately screenshot the loading state (spinner visible)
-3. Wait for success → modal closes → you are redirected to the new case page
-
----
-
-## Screenshot 4 — Case Detail: Header + Risk Score
-
-**URL:** `http://localhost:3001/cases/F-9204`
-
-> Case F-9204 is pre-seeded with the full TX-DEMO-001 result (score=95, CRITICAL)
-
-**What to show:**
-- Case ID, customer name (Sarah Jenkins), severity badge (CRITICAL — red)
-- Risk score 95/100
-- Status: IN_REVIEW
-- Assigned to: Marcus Vance
-- Related transaction IDs
-
-**Steps:**
-1. Navigate to `http://localhost:3001/cases/F-9204`
-2. Screenshot the header section (top ~400px of the page)
-
----
-
-## Screenshot 5 — Agent Tabs: Pattern Analyzer
-
-**URL:** `http://localhost:3001/cases/F-9204` → **PATTERN ANALYZER** tab
-
-**What to show:**
-- Pattern Analyzer reasoning: amount z-score 4.45, geo distance 8,472.7 km
-- Flags: `AMOUNT_SPIKE`, `GEO_MISMATCH`
-- Blue tab active border
-
-**Steps:**
-1. The **PATTERN ANALYZER** tab is active by default
-2. Screenshot the tab panel showing the summary text and red flag badges
-
----
-
-## Screenshot 6 — Agent Tabs: Behavioral Risk Agent
-
-**URL:** `http://localhost:3001/cases/F-9204` → **BEHAVIORAL RISK AGENT** tab
-
-**What to show:**
-- Full behavioral reasoning: 96.1σ above normal, new device, new IP range, new account (5 days)
-- 7 flags: `AMOUNT_DEVIATION`, `GEO_DEVIATION`, `NEW_DEVICE`, `NEW_IP_RANGE`, `RARE_MERCHANT`, `BURST_ACTIVITY`, `NEW_ACCOUNT`
-- Purple tab active border
-
-**Steps:**
-1. Click **BEHAVIORAL RISK AGENT** tab
-2. Screenshot — 7 flag badges should all be visible
-
----
-
-## Screenshot 7 — Agent Tabs: Aggregated Risk Scorer
-
-**URL:** `http://localhost:3001/cases/F-9204` → **AGGREGATED RISK SCORER** tab
-
-**What to show:**
-- Score blending math visible in the summary: pattern 0.7 × 0.5 + behavioral 1.0 × 0.5 = 0.85
-- Boost +0.10 applied → final 95, CRITICAL, BLOCK
-- Red tab active border
-
-**Steps:**
-1. Click **AGGREGATED RISK SCORER** tab
-2. Screenshot
-
----
-
-## Screenshot 8 — Audit Trail (Full Timeline)
-
-**URL:** `http://localhost:3001/cases/F-9204` → scroll down to **Audit Trail**
-
-**What to show:**
-- 6 timestamped audit entries (5 pipeline agents + 1 case assignment)
-- Correlation IDs visible (`TX-DEMO-001-20260317090400-001` through `-006`)
-- Policy version badges in green (`action-policy-2026-03-16`)
-- Blue dot on the most recent entry, grey dots for others
-
-**Steps:**
-1. Scroll to the bottom of the case detail page
-2. Screenshot the full audit trail panel
-
----
-
-## Screenshot 9 — Quick Actions Panel
-
-**URL:** `http://localhost:3001/cases/F-9204` → **Quick Actions** panel (right column)
-
-**What to show:**
-- Assign Case, Add Note, Escalate, Close Case action buttons
-- 3 executed actions listed: `freeze_transaction`, `notify_security_team`, `create_case_report`
-
-**Steps:**
-1. Screenshot the right column showing actions executed + the action buttons
-
----
-
-## Screenshot 10 — Analytics Page
-
-**URL:** `http://localhost:3001/analytics`
-
-**What to show:**
-- Avg Time to Close: 3.4 hrs
-- Escalation Rate: 12%
-- Alerts by Severity bar chart (CRITICAL=2, HIGH=1, MEDIUM=1, LOW=2)
-- 30-day fraud trend sparkline
-- Top flags bar chart (GEO_MISMATCH, AMOUNT_SPIKE, NEW_DEVICE, VELOCITY_CHECK_FAILED, NEW_MERCHANT)
-
-**Steps:**
-1. Navigate to `http://localhost:3001/analytics`
-2. Screenshot the full page
-
----
-
-## Screenshot 11 — ADK Dev UI: Agent List
-
-**URL:** `http://localhost:8080`
-
-> Requires `mvn exec:java@dev-ui` running in `sentinel-ai-agent`
-
-**What to show:**
-- The ADK developer interface showing SentinelOrchestrator as the root agent
-- The 5 sub-agents listed below it
-
-**Steps:**
-1. Open `http://localhost:8080`
-2. Screenshot the main agent selection screen
-
----
-
-## Screenshot 12 — ADK Dev UI: Live Tool Trace
-
-**URL:** `http://localhost:8080` → select **SentinelOrchestrator** → submit TX-DEMO-001
-
-**What to show:**
-- The conversation thread inside the ADK dev UI
-- Visible tool calls: `run_pattern_analyzer`, `run_behavioral_risk`, `run_evidence_builder`, `run_aggregated_scorer`, `run_action_executor`
-- Each tool's JSON input and output inline
-- The final orchestrator JSON output with `orchestration_status: COMPLETE`
-
-**Steps:**
-1. Select **SentinelOrchestrator** in the left panel
-2. Paste the TX-DEMO-001 JSON into the input box:
-```json
-{
-  "transaction_id": "TX-DEMO-001",
-  "customer_id": "CUST-SJ01",
-  "customer_name": "Sarah Jenkins",
-  "amount": 4950.00,
-  "currency": "USD",
-  "merchant": "ElectroHub Lagos",
-  "merchant_category": "ELECTRONICS",
-  "channel": "CARD_NOT_PRESENT",
-  "country": "NG",
-  "city": "Lagos",
-  "device_id": "DEV-NEW-9921",
-  "ip_address": "197.211.62.10",
-  "timestamp": "2026-03-17T09:04:00Z",
-  "customer_profile": {
-    "home_country": "US",
-    "home_city": "New York",
-    "avg_transaction_amount": 145.00,
-    "known_devices": ["DEV-IPHONE-001", "DEV-MACBOOK-002"],
-    "last_login_location": "New York, US",
-    "last_login_time": "2026-03-17T09:00:00Z"
-  }
-}
-```
-3. Click **Send** — wait ~90s for the pipeline to complete
-4. Screenshot the full conversation showing all 5 tool call expand/collapse sections
-5. Scroll down and screenshot the final JSON output block
-
----
-
-## Screenshot 13 — ADK Dev UI: Individual Tool Expanded
-
-**What to show:**
-- One tool call fully expanded (e.g. `run_behavioral_risk`)
-- Input JSON visible (transaction + customer_profile)
-- Output JSON visible (behavioral_risk_score=100, flags=[AMOUNT_DEVIATION, GEO_DEVIATION, NEW_DEVICE, NEW_IP_RANGE, RARE_MERCHANT, BURST_ACTIVITY, NEW_ACCOUNT])
-
-**Steps:**
-1. After the pipeline finishes (Screenshot 12), click the expand arrow on `run_behavioral_risk`
-2. Screenshot the expanded tool call showing input + output side by side
-
----
-
-## Recommended Annotation Highlights
-
-When annotating screenshots for slides/docs:
-
-| Screenshot | Annotation to add |
-|---|---|
-| 1 — Dashboard | Arrow to CRITICAL badge, arrow to risk score gauge |
-| 2 — Modal | Circle around `"city": "Lagos"`, `"device_id": "DEV-NEW-9921"` |
-| 5 — Pattern tab | Callout: "8,472 km in 4 min = physically impossible" |
-| 6 — Behavioral tab | Callout: "7 independent signals confirm fraud" |
-| 7 — Aggregator tab | Callout: "Score math is transparent, not a black box" |
-| 8 — Audit trail | Callout: "Correlation ID traceable end-to-end" |
-| 12 — ADK live trace | Callout: "Watch 5 AI agents reason in real time" |
-
 ---
 
 ## What You Are Looking At
@@ -350,6 +74,7 @@ curl -X POST http://localhost:8080/api/ingest \
 ```
 
 **Expected pipeline outcome:**
+
 - Agent #1: `risk_score ≈ 88`, flags `GEO_MISMATCH`, `AMOUNT_SPIKE` (3,314% above avg), `VELOCITY_CHECK_FAILED`
 - Agent #2: `behavioral_score ≈ 91`, flags `NEW_DEVICE`, `GEO_DEVIATION`, `BURST_ACTIVITY`
 - Agent #3: Evidence bundle with 5 combined flags, human-readable summary
@@ -357,6 +82,7 @@ curl -X POST http://localhost:8080/api/ingest \
 - Agent #5: executes `freeze_transaction` + `notify_security_team` + `create_case_report`
 
 **What to show in the dashboard:**
+
 1. New alert appears at top of **Recent Alerts Queue** with `CRITICAL` severity badge
 2. Navigate to the case → **Agent Tabs** show 4 tabs of reasoning
 3. **Audit Timeline** shows 5 timestamped events from 3 agents
@@ -399,12 +125,14 @@ curl -X POST http://localhost:8080/api/ingest \
 ```
 
 **Expected pipeline outcome:**
+
 - Agent #1: `risk_score ≈ 72`, flags `VELOCITY_CHECK_FAILED`, `RARE_MCC`
 - Agent #2: `behavioral_score ≈ 68`, flags `NEW_IP_RANGE`, `MERCHANT_NOVELTY`, `BURST_ACTIVITY`
 - Agent #4: `final_risk_score ≈ 71`, severity `HIGH`, recommended `notify_security_team`
 - Agent #5: executes `notify_security_team` + `request_step_up_auth`
 
 **What to show in the dashboard:**
+
 1. Alert with `HIGH` severity — notice no freeze (lower confidence than CRITICAL)
 2. In Case Detail → **Agent Tabs** → Behavioral Risk tab shows 8 transactions in 10 min
 3. Click **Add Note** → type: "Card testing pattern — monitor for large follow-up charge"
@@ -448,12 +176,14 @@ curl -X POST http://localhost:8080/api/ingest \
 ```
 
 **Expected pipeline outcome:**
+
 - Agent #1: `risk_score ≈ 22`, flags `[]` (amount high but consistent with profile)
 - Agent #2: `behavioral_score ≈ 18`, flags `[]` (known device, known merchant category)
 - Agent #4: `final_risk_score ≈ 20`, severity `LOW`, recommended `create_case_report`
 - Agent #5: executes `create_case_report` only — no freeze, no notification
 
 **What to show in the dashboard:**
+
 1. Alert with `LOW` severity (green dot) — RESOLVED status
 2. Highlight: **no freeze action taken** — policy-governed precision
 3. Explain: false positives cost customer trust and analyst time — Sentinel avoids them
@@ -498,12 +228,14 @@ curl -X POST http://localhost:8080/api/ingest \
 ```
 
 **Expected pipeline outcome:**
+
 - Agent #1: `risk_score ≈ 95`, flags `AMOUNT_SPIKE`, `RARE_MCC`, `VELOCITY_CHECK_FAILED`
 - Agent #2: `behavioral_score ≈ 97`, flags `NEW_ACCOUNT`, `NEW_DEVICE`, `BURST_ACTIVITY`, `GEO_DEVIATION`
 - Agent #4: `final_risk_score ≈ 96`, severity `CRITICAL`
 - Agent #5: executes `freeze_transaction` + `notify_security_team` + `escalate_to_human` + `create_case_report`
 
 **What to show in the dashboard:**
+
 1. Risk score 96 — highest in the demo
 2. **4 actions executed** — show the actions tab in case detail
 3. Show **Audit Timeline** — 6 events in under 2 minutes, all machine-executed
@@ -548,12 +280,14 @@ curl -X POST http://localhost:8080/api/ingest \
 ```
 
 **Expected pipeline outcome:**
+
 - Agent #1: `risk_score ≈ 35`, flags `TIME_ANOMALY` (known merchant reduces pattern score)
 - Agent #2: `behavioral_score ≈ 62`, flags `NEW_DEVICE`, `NEW_IP_RANGE`, `TIME_DEVIATION`
 - Agent #4: `final_risk_score ≈ 52`, severity `MEDIUM` — behavioural signals outweigh pattern
 - Agent #5: executes `notify_security_team` (no freeze — amount is normal, merchant is trusted)
 
 **What to show in the dashboard:**
+
 1. Severity `MEDIUM` — not a freeze, but a flag
 2. Compare: Agent #1 score (35) vs Agent #2 score (62) — behavioural agent caught what pattern missed
 3. This demonstrates **why multiple specialised agents outperform a single model**
@@ -591,17 +325,17 @@ Each agent's **reasoning**, **tool call inputs**, **tool call outputs**, and **f
 
 ## Key Differentiators to Highlight to Judges
 
-| Feature | What it shows |
-|---------|--------------|
-| **5 specialised agents** | Each has a single job — pattern, behaviour, evidence, scoring, action. No monolithic prompt doing everything. |
-| **Google ADK compliance** | Strict tool registration. Agent #5 cannot take an action unless the tool is explicitly registered. No hallucinated actions. |
-| **Explainability by design** | Agent #3 produces a human-readable evidence bundle *before* any action is taken. Every flag is traceable to a specific signal. |
-| **False positive control** | Scenario 3 shows a legitimate $8,200 transaction correctly cleared. Over-triggering destroys customer trust. |
-| **Behavioural AI** | Scenario 5 shows Agent #2 catching what Agent #1 missed — same merchant, same amount, different device+time. |
-| **Policy-governed actions** | The same `recommended_action` from Agent #4 maps to different tool sets depending on severity. No improvisation. |
-| **Full audit trail** | Every mutation (assign, note, escalate, close) appends a timestamped, correlation-ID-linked audit entry. |
-| **Live deployment** | Running on Google Cloud Run right now. CI/CD via GitHub Actions. Not a prototype. |
-| **ADK Dev UI** | You can watch the agents reason step-by-step at http://localhost:8090 — not a black box. |
+| Feature                      | What it shows                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **5 specialised agents**     | Each has a single job — pattern, behaviour, evidence, scoring, action. No monolithic prompt doing everything.                  |
+| **Google ADK compliance**    | Strict tool registration. Agent #5 cannot take an action unless the tool is explicitly registered. No hallucinated actions.    |
+| **Explainability by design** | Agent #3 produces a human-readable evidence bundle _before_ any action is taken. Every flag is traceable to a specific signal. |
+| **False positive control**   | Scenario 3 shows a legitimate $8,200 transaction correctly cleared. Over-triggering destroys customer trust.                   |
+| **Behavioural AI**           | Scenario 5 shows Agent #2 catching what Agent #1 missed — same merchant, same amount, different device+time.                   |
+| **Policy-governed actions**  | The same `recommended_action` from Agent #4 maps to different tool sets depending on severity. No improvisation.               |
+| **Full audit trail**         | Every mutation (assign, note, escalate, close) appends a timestamped, correlation-ID-linked audit entry.                       |
+| **Live deployment**          | Running on Google Cloud Run right now. CI/CD via GitHub Actions. Not a prototype.                                              |
+| **ADK Dev UI**               | You can watch the agents reason step-by-step at http://localhost:8090 — not a black box.                                       |
 
 ---
 
@@ -613,11 +347,11 @@ Each agent's **reasoning**, **tool call inputs**, **tool call outputs**, and **f
 
 ## Risk Score Reference
 
-| Score | Severity | Typical Actions |
-|-------|----------|----------------|
-| 0–30 | LOW | `create_case_report` only |
-| 31–60 | MEDIUM | `notify_security_team` |
-| 61–80 | HIGH | `notify_security_team` + `request_step_up_auth` |
+| Score  | Severity | Typical Actions                                                      |
+| ------ | -------- | -------------------------------------------------------------------- |
+| 0–30   | LOW      | `create_case_report` only                                            |
+| 31–60  | MEDIUM   | `notify_security_team`                                               |
+| 61–80  | HIGH     | `notify_security_team` + `request_step_up_auth`                      |
 | 81–100 | CRITICAL | `freeze_transaction` + `notify_security_team` + `create_case_report` |
 
 ---

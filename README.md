@@ -14,6 +14,108 @@
 
 ---
 
+## 📸 Demo
+
+> All screenshots captured from the live local development build at `http://localhost:3001`.
+> Pre-seeded with case **F-9204** (Sarah Jenkins · TX-DEMO-001 · score=85 · CRITICAL · BLOCK).
+
+### Main Dashboard
+
+KPI cards (Total Alerts, Pending Reviews, Avg Risk Score, Prevented Loss) · Case Risk Score gauge · Fraud Trends chart · Recent Alerts queue.
+
+![Main Dashboard](screenshots/01-dashboard.png)
+
+---
+
+### Ingest Transaction Modal
+
+Submit a raw transaction JSON to trigger the full 5-agent pipeline. Pre-loaded with the Sarah Jenkins / TX-DEMO-001 scenario (Lagos, Nigeria · CARD_NOT_PRESENT · $4,950 · new device).
+
+![Ingest Transaction Modal](screenshots/02-ingest-modal.png)
+
+---
+
+### Case Detail — Header & Alert Summary
+
+Case ID, customer name, CRITICAL severity badge, risk score 85/100, `freeze_transaction` recommended action, assigned analyst, and policy version.
+
+![Case Detail Header](screenshots/03-case-detail-header.png)
+
+---
+
+### Agent Reasoning — Pattern Analyzer Tab
+
+Flags detected: `GEO_MISMATCH`, `RAPID_LOCATION_CHANGE`. Reasoning: rapid geographic shift from New York to Lagos.
+
+![Pattern Analyzer](screenshots/04-agent-pattern-analyzer.png)
+
+---
+
+### Agent Reasoning — Behavioral Risk Agent Tab
+
+Flags detected: `AMOUNT_SPIKE`, `NEW_DEVICE`. Full behavioral deviation scoring with contribution breakdown.
+
+![Behavioral Risk Agent](screenshots/05-agent-behavioral-risk.png)
+
+---
+
+### Agent Reasoning — Aggregated Risk Scorer Tab
+
+Weighted score blending (pattern + behavioral), boost applied, final score 85 · CRITICAL · BLOCK.
+
+![Aggregated Risk Scorer](screenshots/06-agent-risk-scorer.png)
+
+---
+
+### Audit Trail
+
+Timestamped, correlation-ID-linked entries for every pipeline event: Pattern Analyzer flag → Risk score computed → Transaction frozen → Case assigned. Policy version badge visible on every entry.
+
+![Audit Trail](screenshots/07-audit-trail.png)
+
+---
+
+### Analytics Page
+
+Avg Time to Close: 3.4 hrs · Escalation Rate: 12% · Alerts by Severity bar chart · Top Fraud Flags: `GEO_MISMATCH`, `NEW_DEVICE`, `AMOUNT_SPIKE`, `BURST_ACTIVITY`, `NEW_IP_RANGE`.
+
+![Analytics](screenshots/08-analytics.png)
+
+---
+
+### Admin / Policy Viewer
+
+System configuration, agent versions, and alert routing thresholds (read-only).
+
+![Admin](screenshots/09-admin.png)
+
+---
+
+### ADK Dev UI — Agent Selection
+
+The Google ADK Developer Interface with **SentinelOrchestrator** selected. Shows the Trace / Events / State / Artifacts / Sessions / Eval tabs and the chat input for submitting transactions directly to the agent.
+
+![ADK Agent List](screenshots/10-adk-agent-list.png)
+
+---
+
+### ADK Dev UI — Live Tool Trace (TX-DEMO-001)
+
+After submitting the Sarah Jenkins transaction, all 5 tool calls are visible in real time:
+`run_pattern_analyzer` → `run_behavioral_risk` → `run_evidence_builder` → `run_aggregated_scorer` → `run_action_executor`. ✓ = completed, ⚡ = in-flight.
+
+![ADK Live Tool Trace](screenshots/11-adk-tool-trace.png)
+
+---
+
+### ADK Dev UI — Event Detail & Agent Graph
+
+Expanded event panel showing the **SentinelOrchestrator** agent graph with all 5 sub-tools connected, plus the raw `functionResponse` JSON for `run_behavioral_risk`.
+
+![ADK Tool Expanded](screenshots/12-adk-tool-expanded.png)
+
+---
+
 ## System Architecture
 
 ```
