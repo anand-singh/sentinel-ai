@@ -22,7 +22,7 @@ public class SummaryComposerTool {
         List<String> summaryParts = new ArrayList<>();
 
         // Pattern analysis summary
-        if (patternReasoning != null && !patternReasoning.isEmpty()) {
+        if (patternReasoning != null && !patternReasoning.trim().isEmpty()) {
             String patternPhrase = extractKeyPhrase(patternReasoning, combinedFlags, "pattern");
             if (patternPhrase != null) {
                 summaryParts.add(patternPhrase);
@@ -30,7 +30,7 @@ public class SummaryComposerTool {
         }
 
         // Behavioral analysis summary
-        if (behavioralReasoning != null && !behavioralReasoning.isEmpty()) {
+        if (behavioralReasoning != null && !behavioralReasoning.trim().isEmpty()) {
             String behavioralPhrase = extractKeyPhrase(behavioralReasoning, combinedFlags, "behavioral");
             if (behavioralPhrase != null) {
                 summaryParts.add(behavioralPhrase);
@@ -38,7 +38,7 @@ public class SummaryComposerTool {
         }
 
         // AML summary
-        if (amlReasoning != null && !amlReasoning.isEmpty()) {
+        if (amlReasoning != null && !amlReasoning.trim().isEmpty()) {
             String amlPhrase = extractKeyPhrase(amlReasoning, combinedFlags, "aml");
             if (amlPhrase != null) {
                 summaryParts.add(amlPhrase);

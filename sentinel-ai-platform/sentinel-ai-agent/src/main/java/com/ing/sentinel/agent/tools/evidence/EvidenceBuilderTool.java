@@ -41,21 +41,21 @@ public class EvidenceBuilderTool {
         // Build explanation items
         List<ExplanationItem> explanationItems = new ArrayList<>();
 
-        if (patternReasoning != null && !patternReasoning.isEmpty()) {
+        if (patternReasoning != null && !patternReasoning.trim().isEmpty()) {
             explanationItems.add(new ExplanationItem(
                 "pattern_agent",
                 summarizeReasoning(patternReasoning)
             ));
         }
 
-        if (behavioralReasoning != null && !behavioralReasoning.isEmpty()) {
+        if (behavioralReasoning != null && !behavioralReasoning.trim().isEmpty()) {
             explanationItems.add(new ExplanationItem(
                 "behavioral_agent",
                 summarizeReasoning(behavioralReasoning)
             ));
         }
 
-        if (amlReasoning != null && !amlReasoning.isEmpty()) {
+        if (amlReasoning != null && !amlReasoning.trim().isEmpty()) {
             explanationItems.add(new ExplanationItem(
                 "aml_agent",
                 summarizeReasoning(amlReasoning)
