@@ -49,3 +49,5 @@ __pycache__/
 # Scratch files
 *.scratch.*
 /tmp/
+**/node_modules/*
+**/.next/**
