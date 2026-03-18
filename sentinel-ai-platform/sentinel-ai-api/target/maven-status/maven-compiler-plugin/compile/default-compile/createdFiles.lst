@@ -1,6 +1,0 @@
-com/ing/sentinel/api/SentinelApiController.class
-com/ing/sentinel/store/CaseStoreService.class
-com/ing/sentinel/config/CorsConfig.class
-com/ing/sentinel/SentinelApplication.class
-com/ing/sentinel/api/HealthController.class
-com/ing/sentinel/service/OrchestratorService.class
