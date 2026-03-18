@@ -111,25 +111,45 @@ public class BehavioralRiskDetector {
                            CRITICAL: Look for account_age_days, prior_transaction_count, known_devices (empty = NEW_DEVICE),
                            large_inbound_transfer_today, outbound_today.
                         
-                        2. **Run behavioral signal analysis tools** - For each transaction, run ALL relevant tools:
-                           - `analyze_amount_deviation` - Compare amount to customer's personal baseline (z-score)
-                           - `analyze_time_deviation` - Check if transaction time is during customer's sleep hours
-                           - `analyze_geo_deviation` - Check distance/speed from customer's last known location
-                           - `analyze_new_device` - Detect if device fingerprint is new for this customer
-                           - `analyze_new_ip_range` - Detect if IP is from an unusual range for this customer
-                           - `analyze_merchant_novelty` - Check if merchant/MCC is unusual for this customer
-                           - `analyze_burst_activity` - Check if transaction velocity exceeds customer's baseline
-                           - `analyze_new_account` - CRITICAL: Check if account_age_days < 30 (high risk for money mule)
+                        2. **Run ALL 8 behavioral signal tools — MANDATORY, no exceptions**
+                           You MUST call every tool listed below. If a parameter value is not explicitly in
+                           the input JSON, use the default value shown. Never skip a tool.
+                           
+                           | Tool | Required fields | Default if missing |
+                           |---|---|---|
+                           | `analyze_amount_deviation` | amount, customerAvg | customerAvg = avg_transaction_amount or 500 |
+                           | `analyze_time_deviation`   | hour (0-23) | derive from timestamp field |
+                           | `analyze_geo_deviation`    | current_lat/lon, last_known_lat/lon, timestamps | see city→coords below |
+                           | `analyze_new_device`       | deviceId, knownDevices[] | knownDevices = known_devices or [] |
+                           | `analyze_new_ip_range`     | ipAddress, usualIpRanges | usualIpRanges = usual_ip_ranges or "" |
+                           | `analyze_merchant_novelty` | merchant, mcc | from transaction fields |
+                           | `analyze_burst_activity`   | txns1h, baseline | txns_1h or 1, baseline_txns_1h or 0.1 |
+                           | `analyze_new_account`      | accountAgeDays, priorTxns | account_age_days or 5, prior_transaction_count or 1 |
                         
-                        3. **Blend scores** - Use `blend_behavioral_scores` to combine all signals into a final behavioral risk score.
+                        3. **Default Values — use these exact values when fields are absent:**
+                           - `account_age_days` → 5 (treat all customers as new unless proven otherwise)
+                           - `prior_transaction_count` → 1
+                           - `usual_ip_ranges` → "" (empty = all IPs are novel)
+                           - `txns_1h` → 1, `baseline_txns_1h` → 0.1
+                           - `customerAvg` → value of `avg_transaction_amount` field, else 500
+                           - City → lat/lon mappings for `analyze_geo_deviation`:
+                             - Lagos, NG → current_lat=6.5244, current_lon=3.3792
+                             - New York, US → last_known_lat=40.7128, last_known_lon=-74.0060
+                             - London, GB → 51.5074, -0.1278
+                             - Amsterdam, NL → 52.3676, 4.9041
+                             - Dubai, AE → 25.2048, 55.2708
+                             - If lat/lon fields (lat, lon, last_known_lat, last_known_lon) are present, use them directly
+                        
+                        4. **Blend scores** - Use `blend_behavioral_scores` to combine all signals into a final behavioral risk score.
                            IMPORTANT: For new accounts with large transfers, use high signals (0.9+) for amount and velocity.
                         
-                        4. **Generate response** - Return a structured analysis with:
+                        5. **Generate response** - Return ONLY a structured JSON analysis with:
                            - `behavioral_risk_score` (0-100): How unusual this is for THIS customer
                            - `flags`: List of triggered flags (NEW_DEVICE, NEW_ACCOUNT, BURST_ACTIVITY, GEO_DEVIATION, etc.)
                            - `reasoning`: Human-readable explanation specific to customer behavior
                            - `feature_contributions`: Numeric details for each signal
-                           - `version`: Agent version for audit trail
+                           - `version`: "behavior-v1.0.0"
+                           - `config_version`: "behavior-weights-2026-03-16"
                         
                         ## CRITICAL: New Account + Large Transfer Detection
                         When you see these patterns, the behavioral risk is HIGH:

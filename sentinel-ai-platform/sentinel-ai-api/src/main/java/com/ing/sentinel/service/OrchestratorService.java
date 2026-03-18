@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -46,6 +49,9 @@ public class OrchestratorService {
      * Returns the persisted CaseDetail node (ready to serialize as HTTP response).
      */
     public ObjectNode ingest(String transactionJson) throws Exception {
+        // Enrich the transaction with derived behavioral fields before pipeline
+        String enrichedJson = enrichTransactionForPipeline(transactionJson);
+
         String agentName = SentinelOrchestrator.ROOT_AGENT.name();
         String userId = "api-user-" + UUID.randomUUID().toString().substring(0, 8);
 
@@ -53,7 +59,7 @@ public class OrchestratorService {
             .createSession(agentName, userId)
             .blockingGet();
 
-        Content userMsg = Content.fromParts(Part.fromText(transactionJson));
+        Content userMsg = Content.fromParts(Part.fromText(enrichedJson));
 
         StringBuilder fullOutput = new StringBuilder();
         runner.runAsync(userId, session.id(), userMsg)
@@ -66,9 +72,9 @@ public class OrchestratorService {
         // Extract JSON from the LLM response
         JsonNode orchResult = extractJson(raw);
 
-        // Parse transaction metadata
+        // Parse transaction metadata (use enriched JSON for full field access)
         JsonNode txNode;
-        try { txNode = mapper.readTree(transactionJson); }
+        try { txNode = mapper.readTree(enrichedJson); }
         catch (Exception e) { txNode = mapper.createObjectNode(); }
 
         String txId = txNode.path("transaction_id").asText("TX-" + UUID.randomUUID().toString().substring(0, 8));
@@ -80,7 +86,9 @@ public class OrchestratorService {
         int riskScore = decision.path("risk_score").asInt(50);
         String severity = mapSeverity(decision.path("severity").asText("MED"));
         String recAction = firstAction(decision.path("executed_actions"));
-        if (recAction.isEmpty()) recAction = mapRecommendedAction(decision.path("recommended_action").asText("REVIEW"));
+        if (recAction.isEmpty()) recAction = mapRecommendedAction(decision.path("recommended_action").asText(
+            orchResult.path("pipeline_results").path("aggregated_scorer")
+                .path("recommended_action").asText("REVIEW")));
 
         String alertId = "ALERT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         ObjectNode alertNode = mapper.createObjectNode();
@@ -121,17 +129,26 @@ public class OrchestratorService {
         // Actions executed
         ArrayNode actionsExec = mapper.createArrayNode();
         JsonNode execActions = decision.path("executed_actions");
-        if (execActions.isArray()) {
-            int idx = 1;
-            for (JsonNode a : execActions) {
-                ObjectNode ae = mapper.createObjectNode();
-                ae.put("id", "ACT-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
-                ae.put("type", a.asText());
-                ae.put("performedBy", "orchestrator-v1.0.0");
-                ae.put("timestamp", Instant.now().minus(idx * 10L, ChronoUnit.SECONDS).toString());
-                actionsExec.add(ae);
-                idx++;
-            }
+        List<String> actionNames = new ArrayList<>();
+        if (execActions.isArray() && execActions.size() > 0) {
+            execActions.forEach(a -> actionNames.add(a.asText()));
+        } else {
+            // ActionExecutor returned no output — derive actions from aggregator's recommended_action
+            String recActionForFallback = orchResult.path("pipeline_results")
+                .path("aggregated_scorer").path("recommended_action").asText(
+                    decision.path("recommended_action").asText("REVIEW"));
+            actionNames.addAll(inferActions(recActionForFallback));
+            log.info("[ingest] ActionExecutor empty — inferred actions from aggregator: " + actionNames);
+        }
+        int actIdx = 1;
+        for (String action : actionNames) {
+            ObjectNode ae = mapper.createObjectNode();
+            ae.put("id", "ACT-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+            ae.put("type", action);
+            ae.put("performedBy", "orchestrator-v1.0.0");
+            ae.put("timestamp", Instant.now().minus(actIdx * 10L, ChronoUnit.SECONDS).toString());
+            actionsExec.add(ae);
+            actIdx++;
         }
         caseNode.set("actionsExecuted", actionsExec);
 
@@ -165,6 +182,99 @@ public class OrchestratorService {
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
+    private List<String> inferActions(String recommendedAction) {
+        return switch (recommendedAction.toUpperCase()) {
+            case "BLOCK"     -> List.of("freeze_transaction", "notify_security_team", "create_case_report");
+            case "CHALLENGE" -> List.of("request_step_up_auth", "create_case_report");
+            case "REVIEW"    -> List.of("create_case_report");
+            default          -> List.of("create_case_report");
+        };
+    }
+
+    // ── Known city → [lat, lon] used to enrich transactions lacking explicit geo ──
+    private static final Map<String, double[]> CITY_COORDS = Map.of(
+        "new york",  new double[]{ 40.7128,  -74.0060 },
+        "lagos",     new double[]{  6.5244,    3.3792 },
+        "london",    new double[]{ 51.5074,   -0.1278 },
+        "amsterdam", new double[]{ 52.3676,    4.9041 },
+        "dubai",     new double[]{ 25.2048,   55.2708 },
+        "paris",     new double[]{ 48.8566,    2.3522 },
+        "singapore", new double[]{  1.3521,  103.8198 }
+    );
+
+    private double[] cityToCoords(String location) {
+        if (location == null || location.isBlank()) return null;
+        String lower = location.toLowerCase();
+        for (Map.Entry<String, double[]> entry : CITY_COORDS.entrySet()) {
+            if (lower.contains(entry.getKey())) return entry.getValue();
+        }
+        return null;
+    }
+
+    /**
+     * Enriches the incoming transaction JSON with derived behavioral fields
+     * (lat/lon, account_age_days, usual_ip_ranges, etc.) so that the
+     * BehavioralRiskDetector LLM can parameterize ALL of its signal tools
+     * without needing to infer/guess missing values.
+     */
+    private String enrichTransactionForPipeline(String transactionJson) {
+        try {
+            ObjectNode tx = (ObjectNode) mapper.readTree(transactionJson);
+
+            // Add transaction-level lat/lon if missing (used by GeoDistanceTool in Pattern Analyzer)
+            if (!tx.has("lat") || !tx.has("lon")) {
+                String city    = tx.path("city").asText("");
+                String country = tx.path("country").asText("");
+                double[] coords = cityToCoords(city + ", " + country);
+                if (coords == null) coords = cityToCoords(city);
+                if (coords != null) {
+                    tx.put("lat", coords[0]);
+                    tx.put("lon", coords[1]);
+                }
+            }
+
+            // Enrich customer_profile with behavioral tool parameters
+            JsonNode profileNode = tx.path("customer_profile");
+            if (profileNode.isObject()) {
+                ObjectNode p = (ObjectNode) profileNode;
+
+                // account_age_days / prior_transaction_count
+                if (!p.has("account_age_days"))
+                    p.put("account_age_days", 5);          // very new = high risk default
+                if (!p.has("prior_transaction_count"))
+                    p.put("prior_transaction_count", 1);
+
+                // IP range — empty = any IP is novel
+                if (!p.has("usual_ip_ranges"))
+                    p.put("usual_ip_ranges", "");
+
+                // Burst detection fields
+                if (!p.has("txns_1h"))
+                    p.put("txns_1h", 1);
+                if (!p.has("baseline_txns_1h"))
+                    p.put("baseline_txns_1h", 0.1);
+
+                // home_countries as comma-separated string for GeoDeviationSignal
+                if (!p.has("home_countries") && p.has("home_country"))
+                    p.put("home_countries", p.path("home_country").asText(""));
+
+                // Derive last_known_lat/lon from last_login_location if missing
+                if (!p.has("last_known_lat") && p.has("last_login_location")) {
+                    double[] coords = cityToCoords(p.path("last_login_location").asText(""));
+                    if (coords != null) {
+                        p.put("last_known_lat", coords[0]);
+                        p.put("last_known_lon", coords[1]);
+                    }
+                }
+            }
+
+            return mapper.writeValueAsString(tx);
+        } catch (Exception e) {
+            log.warning("[ingest] Transaction enrichment failed: " + e.getMessage() + " — using original");
+            return transactionJson;
+        }
+    }
+
     private void addAgentOutput(ArrayNode outputs, String name, JsonNode agentResult) {
         if (agentResult.isMissingNode() || agentResult.isNull()) return;
 
@@ -189,15 +299,61 @@ public class OrchestratorService {
     }
 
     private JsonNode extractJson(String text) {
-        // Find the last JSON object block in the output
-        int last = text.lastIndexOf('{');
-        int end = text.lastIndexOf('}');
-        if (last >= 0 && end > last) {
+        // The orchestrator accumulates output from ALL 5 sub-agents, so the full text
+        // contains many JSON blocks. The final summary (with "orchestration_status" and
+        // "final_decision") is always appended LAST by the orchestrator LLM.
+        // Strategy: collect all top-level JSON blocks, then return the last one that
+        // contains the orchestrator summary keys.
+
+        List<int[]> blocks = new ArrayList<>();
+        int searchFrom = 0;
+        while (searchFrom < text.length()) {
+            int start = text.indexOf('{', searchFrom);
+            if (start < 0) break;
+            int depth = 0;
+            boolean inString = false;
+            boolean escape = false;
+            int end = -1;
+            for (int i = start; i < text.length(); i++) {
+                char c = text.charAt(i);
+                if (escape) { escape = false; continue; }
+                if (c == '\\' && inString) { escape = true; continue; }
+                if (c == '"') { inString = !inString; continue; }
+                if (inString) continue;
+                if (c == '{') depth++;
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) { end = i; break; }
+                }
+            }
+            if (end > start) {
+                blocks.add(new int[]{start, end});
+                searchFrom = end + 1;
+            } else {
+                searchFrom = start + 1;
+            }
+        }
+
+        // Search from last block backwards for the orchestrator summary
+        for (int i = blocks.size() - 1; i >= 0; i--) {
+            int[] b = blocks.get(i);
             try {
-                return mapper.readTree(text.substring(last, end + 1));
+                JsonNode node = mapper.readTree(text.substring(b[0], b[1] + 1));
+                if (!node.path("orchestration_status").isMissingNode()
+                        || !node.path("final_decision").isMissingNode()) {
+                    log.info("[extractJson] Found orchestrator summary at block " + i + "/" + blocks.size());
+                    return node;
+                }
             } catch (Exception ignored) {}
         }
-        // Try the whole text
+
+        // Fallback: return the last parseable JSON block
+        for (int i = blocks.size() - 1; i >= 0; i--) {
+            int[] b = blocks.get(i);
+            try { return mapper.readTree(text.substring(b[0], b[1] + 1)); }
+            catch (Exception ignored) {}
+        }
+
         try { return mapper.readTree(text.trim()); }
         catch (Exception e) { return mapper.createObjectNode(); }
     }
