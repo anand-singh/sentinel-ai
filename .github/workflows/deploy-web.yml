@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "web/**"
+      - "sentinel-ai-web/**"
       - ".github/workflows/deploy-web.yml"
   workflow_dispatch:
 
@@ -41,7 +41,7 @@ jobs:
       - name: Build and Push Docker image
         run: |
           IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sentinel-ai-images/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          docker build -t $IMAGE_URL web/
+          docker build -t $IMAGE_URL sentinel-ai-web/
           docker push $IMAGE_URL
           echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
 

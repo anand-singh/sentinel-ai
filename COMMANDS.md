@@ -2,15 +2,17 @@
 
 ## Project Structure
 
-This is now a **multi-module Maven project**:
+This is now a **multi-module Maven project** located in `sentinel-ai-platform/`:
 - `sentinel-ai-agent/` - Google ADK agents and tools
-- `api/` - Spring Boot REST API
+- `sentinel-ai-api/` - Spring Boot REST API (replaces old `api/` folder)
 
 ## Local Development
 
 ### Build All Modules
 ```bash
-# From root directory
+# Navigate to the platform directory first
+cd sentinel-ai-platform
+
 mvn clean install
 
 # Skip tests
@@ -20,19 +22,19 @@ mvn clean install -DskipTests
 mvn clean install -pl sentinel-ai-agent
 
 # Build only API module
-mvn clean install -pl api
+mvn clean install -pl sentinel-ai-api
 ```
 
 ### Run ADK Development UI (port 8090)
 ```bash
-cd sentinel-ai-agent
+cd sentinel-ai-platform/sentinel-ai-agent
 GEMINI_API_KEY=your_key mvn exec:java@dev-ui
 # Open http://localhost:8090
 ```
 
 ### Run Individual Agents (CLI)
 ```bash
-cd sentinel-ai-agent
+cd sentinel-ai-platform/sentinel-ai-agent
 
 # Orchestrator (full pipeline)
 GEMINI_API_KEY=your_key mvn exec:java@orchestrator
@@ -44,9 +46,9 @@ GEMINI_API_KEY=your_key mvn exec:java@action-executor
 GEMINI_API_KEY=your_key mvn exec:java@evidence-builder
 ```
 
-### Run Spring Boot REST API (port 8080)
+### Run Spring Boot REST API (port 8090)
 ```bash
-cd api
+cd sentinel-ai-platform/sentinel-ai-api
 GEMINI_API_KEY=your_key mvn spring-boot:run
 
 # Or using packaged jar
@@ -60,10 +62,10 @@ mvn test
 
 # Specific module
 mvn test -pl sentinel-ai-agent
-mvn test -pl api
+mvn test -pl sentinel-ai-api
 
 # Specific test class
-cd api
+cd sentinel-ai-platform/sentinel-ai-api
 mvn test -Dtest=OrchestratorServiceTest
 ```
 

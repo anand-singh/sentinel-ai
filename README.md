@@ -81,7 +81,7 @@
 ### Run the Full Pipeline
 
 ```bash
-cd api
+cd sentinel-ai-platform/sentinel-ai-agent
 export GOOGLE_CLOUD_PROJECT="your-project-id"
 export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 

@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "api/**"
+      - "sentinel-ai-platform/**"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -35,8 +35,8 @@ jobs:
 
       - name: Build with Maven
         run: |
-          cd api
-          mvn clean package
+          cd sentinel-ai-platform
+          mvn clean install -DskipTests
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -52,7 +52,7 @@ jobs:
       - name: Build and Push Docker image
         run: |
           IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sentinel-ai-images/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          docker build -t $IMAGE_URL -f api/Dockerfile api/
+          docker build -t $IMAGE_URL -f sentinel-ai-platform/sentinel-ai-api/Dockerfile sentinel-ai-platform/sentinel-ai-api/
           docker push $IMAGE_URL
           echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
 

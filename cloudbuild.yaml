@@ -2,8 +2,8 @@ steps:
   # Build with Maven
   - name: 'maven:3.9-eclipse-temurin-17'
     entrypoint: mvn
-    args: ['clean', 'package', '-DskipTests']
-    dir: 'api'
+    args: ['clean', 'install', '-DskipTests']
+    dir: 'sentinel-ai-platform'
 
   # Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
@@ -14,8 +14,8 @@ steps:
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/sentinel-ai-images/sentinel-api:latest'
       - '-f'
-      - 'api/Dockerfile'
-      - 'api'
+      - 'sentinel-ai-platform/sentinel-ai-api/Dockerfile'
+      - 'sentinel-ai-platform/sentinel-ai-api'
 
   # Push Docker image
   - name: 'gcr.io/cloud-builders/docker'

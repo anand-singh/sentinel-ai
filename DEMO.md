@@ -24,21 +24,21 @@ Every decision is explainable, traceable, and carries a correlation ID, agent ve
 
 ```bash
 # Terminal 1 — Java API (fraud pipeline + REST)
-cd api
+cd sentinel-ai-platform/sentinel-ai-api
 export GEMINI_API_KEY=your_key
 mvn spring-boot:run
-# → http://localhost:8080
+# → http://localhost:8090
 
 # Terminal 2 — Next.js Dashboard
-cd web
-echo "SENTINEL_API_URL=http://localhost:8080" > .env.local
+cd sentinel-ai-web
+echo "SENTINEL_API_URL=http://localhost:8090" > .env.local
 npm run dev
 # → http://localhost:3000
 
 # Optional: Terminal 3 — ADK Dev UI (watch agents live)
-cd api
+cd sentinel-ai-platform/sentinel-ai-agent
 GEMINI_API_KEY=your_key mvn exec:java@dev-ui
-# → http://localhost:8090
+# → http://localhost:8080
 ```
 
 ---
