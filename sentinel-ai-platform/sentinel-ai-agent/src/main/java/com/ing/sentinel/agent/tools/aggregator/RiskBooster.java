@@ -52,6 +52,17 @@ public class RiskBooster {
         double totalBoost = 0.0;
         StringBuilder boostReason = new StringBuilder();
         
+        // Critical flags that warrant immediate boost
+        if (containsAny(flagList, "PEP_MATCH_PENDING", "PEP_MATCH")) {
+            totalBoost += SINGLE_COMBO_BOOST;
+            boostReason.append("PEP match; ");
+        }
+        
+        if (containsAny(flagList, "SANCTIONS_HIT", "SANCTIONS_LIST")) {
+            totalBoost += SINGLE_COMBO_BOOST;
+            boostReason.append("Sanctions hit; ");
+        }
+        
         // High-risk combo 1: Amount + Device + Geo
         if (containsAny(flagList, "AMOUNT_SPIKE") && 
             containsAny(flagList, "NEW_DEVICE") && 

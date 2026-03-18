@@ -56,9 +56,13 @@ public class WeightedScoreBlender {
             // Redistribute AML weight proportionally between pattern and behavioral
             double totalNonAml = actualWeightPattern + actualWeightBehavioral;
             if (totalNonAml > 0) {
-                double scaleFactor = (actualWeightPattern + actualWeightBehavioral + actualWeightAml) / totalNonAml;
-                actualWeightPattern *= scaleFactor;
-                actualWeightBehavioral *= scaleFactor;
+                // Only redistribute if weights don't already sum to 1
+                double weightSum = actualWeightPattern + actualWeightBehavioral;
+                if (weightSum < 1.0) {
+                    double scaleFactor = (actualWeightPattern + actualWeightBehavioral + actualWeightAml) / totalNonAml;
+                    actualWeightPattern *= scaleFactor;
+                    actualWeightBehavioral *= scaleFactor;
+                }
                 actualWeightAml = 0;
             }
             logger.info("⚠️ AML score not available, redistributed weights: pattern=" + 
@@ -83,7 +87,7 @@ public class WeightedScoreBlender {
         }
         
         result.put("blended_score", Math.round(blendedScore * 10000.0) / 10000.0);
-        result.put("source_contributions", contributions);
+        result.put("contributions", contributions);
         result.put("weights_used", Map.of(
             "pattern", actualWeightPattern,
             "behavioral", actualWeightBehavioral,
